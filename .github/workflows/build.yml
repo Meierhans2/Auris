@@ -21,7 +21,7 @@ jobs:
         uses: jakoch/install-vulkan-sdk-action@v1
         with:
           vulkan_version: 1.4.309.0
-          install_runtime: false
+          install_runtime: true
           cache: true
 
       - name: Download premake5
@@ -30,6 +30,18 @@ jobs:
           Invoke-WebRequest $url -OutFile premake5.zip
           Expand-Archive premake5.zip -DestinationPath premake5_bin
           echo "${{ github.workspace }}\premake5_bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Patch ggml-vulkan.cpp for MSVC operator<<
+        shell: powershell
+        run: |
+          $f = "vendor\whisper.cpp\ggml\src\ggml-vulkan\ggml-vulkan.cpp"
+          $content = [System.IO.File]::ReadAllText($f)
+          if ($content -notmatch 'operator<<\(std::ostream') {
+            $old = '#include <vulkan/vulkan.hpp>'
+            $inject = $old + "`r`n`r`n#ifdef _MSC_VER`r`n#include <ostream>`r`ninline std::ostream& operator<<(std::ostream& os, vk::Buffer const&) { return os; }`r`n#endif"
+            $content = $content.Replace($old, $inject)
+            [System.IO.File]::WriteAllText($f, $content)
+          }
 
       - name: Compile Vulkan shaders
         shell: cmd
@@ -43,7 +55,6 @@ jobs:
           set CPP_DIR=%CD%\shader_cpp
           set OUT_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.cpp
           set OUT_HPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.hpp
-          set VULKAN_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan.cpp
 
           cl.exe /nologo /EHsc /O2 /std:c++17 /permissive- /Fe:"%GEN_EXE%" "%GEN_SRC%"
           if errorlevel 1 exit /b 1
@@ -66,17 +77,6 @@ jobs:
           rmdir /s /q "%SPV_DIR%"
           rmdir /s /q "%CPP_DIR%"
           del "%GEN_EXE%" 2>nul
-
-          findstr /c:"operator<<(std::ostream" "%VULKAN_CPP%" >nul 2>&1
-          if errorlevel 1 (
-            powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-              "$f = [System.IO.Path]::GetFullPath('%VULKAN_CPP:\=\\%');" ^
-              "$content = [System.IO.File]::ReadAllText($f);" ^
-              "$old = '#include <vulkan/vulkan.hpp>';" ^
-              "$inject = $old + [System.Environment]::NewLine + [System.Environment]::NewLine + '#ifdef _MSC_VER' + [System.Environment]::NewLine + '#include <ostream>' + [System.Environment]::NewLine + 'inline std::ostream& operator<<(std::ostream& os, vk::Buffer const^&) { return os; }' + [System.Environment]::NewLine + '#endif';" ^
-              "$content = $content.Replace($old, $inject);" ^
-              "[System.IO.File]::WriteAllText($f, $content);"
-          )
 
       - name: Generate VS solution (x86)
         shell: cmd
@@ -115,7 +115,7 @@ jobs:
         uses: jakoch/install-vulkan-sdk-action@v1
         with:
           vulkan_version: 1.4.309.0
-          install_runtime: false
+          install_runtime: true
           cache: true
 
       - name: Download premake5
@@ -124,6 +124,18 @@ jobs:
           Invoke-WebRequest $url -OutFile premake5.zip
           Expand-Archive premake5.zip -DestinationPath premake5_bin
           echo "${{ github.workspace }}\premake5_bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Patch ggml-vulkan.cpp for MSVC operator<<
+        shell: powershell
+        run: |
+          $f = "vendor\whisper.cpp\ggml\src\ggml-vulkan\ggml-vulkan.cpp"
+          $content = [System.IO.File]::ReadAllText($f)
+          if ($content -notmatch 'operator<<\(std::ostream') {
+            $old = '#include <vulkan/vulkan.hpp>'
+            $inject = $old + "`r`n`r`n#ifdef _MSC_VER`r`n#include <ostream>`r`ninline std::ostream& operator<<(std::ostream& os, vk::Buffer const&) { return os; }`r`n#endif"
+            $content = $content.Replace($old, $inject)
+            [System.IO.File]::WriteAllText($f, $content)
+          }
 
       - name: Compile Vulkan shaders
         shell: cmd
@@ -137,7 +149,6 @@ jobs:
           set CPP_DIR=%CD%\shader_cpp
           set OUT_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.cpp
           set OUT_HPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.hpp
-          set VULKAN_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan.cpp
 
           cl.exe /nologo /EHsc /O2 /std:c++17 /permissive- /Fe:"%GEN_EXE%" "%GEN_SRC%"
           if errorlevel 1 exit /b 1
@@ -160,17 +171,6 @@ jobs:
           rmdir /s /q "%SPV_DIR%"
           rmdir /s /q "%CPP_DIR%"
           del "%GEN_EXE%" 2>nul
-
-          findstr /c:"operator<<(std::ostream" "%VULKAN_CPP%" >nul 2>&1
-          if errorlevel 1 (
-            powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-              "$f = [System.IO.Path]::GetFullPath('%VULKAN_CPP:\=\\%');" ^
-              "$content = [System.IO.File]::ReadAllText($f);" ^
-              "$old = '#include <vulkan/vulkan.hpp>';" ^
-              "$inject = $old + [System.Environment]::NewLine + [System.Environment]::NewLine + '#ifdef _MSC_VER' + [System.Environment]::NewLine + '#include <ostream>' + [System.Environment]::NewLine + 'inline std::ostream& operator<<(std::ostream& os, vk::Buffer const^&) { return os; }' + [System.Environment]::NewLine + '#endif';" ^
-              "$content = $content.Replace($old, $inject);" ^
-              "[System.IO.File]::WriteAllText($f, $content);"
-          )
 
       - name: Generate VS solution (x86_64)
         shell: cmd
@@ -204,8 +204,15 @@ jobs:
           sudo apt-get install -y \
             gcc-multilib g++-multilib \
             libvulkan-dev libvulkan-dev:i386 \
-            shaderc \
             cmake
+
+      - name: Install glslc from LunarG SDK
+        run: |
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list \
+            https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
+          sudo apt-get update
+          sudo apt-get install -y shaderc
 
       - name: Download premake5
         run: |
@@ -279,8 +286,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libvulkan-dev \
-            shaderc \
             cmake
+
+      - name: Install glslc from LunarG SDK
+        run: |
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list \
+            https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
+          sudo apt-get update
+          sudo apt-get install -y shaderc
 
       - name: Download premake5
         run: |
