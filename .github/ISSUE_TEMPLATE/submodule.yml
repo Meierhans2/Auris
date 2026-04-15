@@ -1,0 +1,114 @@
+name: "Submit Submodule"
+description: "List your Auris submodule in the README."
+title: "[Submodule] "
+labels: ["submodule"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting, make sure your repo has a README that follows the [submodule README template](https://github.com/ds-kimi/Auris/blob/main/SUBMODULE_README_TEMPLATE.md) and that your addon passes the checklist at the bottom of this form.
+
+  - type: input
+    id: name
+    attributes:
+      label: Addon name
+      placeholder: "Auris Logger"
+    validations:
+      required: true
+
+  - type: input
+    id: repo
+    attributes:
+      label: GitHub repository URL
+      placeholder: "https://github.com/yourname/auris-logger"
+    validations:
+      required: true
+
+  - type: input
+    id: workshop
+    attributes:
+      label: Steam Workshop URL
+      description: Leave blank if not on Workshop yet.
+      placeholder: "https://steamcommunity.com/sharedfiles/filedetails/?id=..."
+
+  - type: input
+    id: subscriber_key
+    attributes:
+      label: Subscriber key
+      description: The exact string you pass to `Auris.Subscribe(name, ...)`.
+      placeholder: "Logger_Console"
+    validations:
+      required: true
+
+  - type: input
+    id: min_version
+    attributes:
+      label: Minimum Auris version
+      placeholder: "2.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: realm
+    attributes:
+      label: Realm
+      options:
+        - Server
+        - Client
+        - Shared
+    validations:
+      required: true
+
+  - type: textarea
+    id: side_effects
+    attributes:
+      label: Side effects
+      description: What your addon actually does with the transcription (print, file write, kick, net message, HTTP request, etc.).
+      placeholder: "Prints to server console. Writes to data/auris-logger/log.txt."
+    validations:
+      required: true
+
+  - type: textarea
+    id: convars
+    attributes:
+      label: ConVars added
+      description: List every ConVar your addon registers. Must be prefixed with your addon name, NOT `auris_`.
+      placeholder: "auris_logger_enabled (0/1)\nauris_logger_file (0/1)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: net_strings
+    attributes:
+      label: Net strings added
+      placeholder: "none"
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Other addons required beyond Auris core.
+      placeholder: "none"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Compliance checklist
+      description: All boxes must be checked before your submission will be reviewed.
+      options:
+        - label: Init is wrapped in `timer.Simple(0, ...)` to handle load order
+          required: true
+        - label: Guards against missing Auris with `if not Auris then ErrorNoHalt(...) return end`
+          required: true
+        - label: Subscriber key is prefixed with my addon folder name
+          required: true
+        - label: No ConVar uses the `auris_` prefix
+          required: true
+        - label: Repo has a README following the Auris submodule template
+          required: true
+        - label: Addon does not call `whisper.*` directly — only uses the `Auris` API
+          required: true

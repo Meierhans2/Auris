@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Real-time voice transcription for Garry’s Mod servers</strong><br>
-  <sub>gm_8bit · Opus · whisper.cpp · server console &amp; <code>data/whisper/transcript.txt</code></sub>
+  <sub>gm_8bit · Opus · whisper.cpp · extensible submodule API</sub>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 
 <br>
 
-Captures player voice chat via [gm_8bit](https://github.com/Meachamp/gm_8bit), decodes Opus audio, and transcribes it using whisper.cpp. Transcriptions are written to `data/whisper/transcript.txt` and printed to the server console.
+Captures player voice chat via [gm_8bit](https://github.com/Meachamp/gm_8bit), decodes Opus audio, and transcribes it in real time using whisper.cpp. Auris is a silent platform — it does nothing by default except make transcriptions available. What happens with them is up to submodule addons.
 
 ---
 
@@ -55,7 +55,7 @@ Place the model on your server in the Garry's Mod data folder:
 
 If you want to use a different model name or path, update it in:
 
-- `garrysmod_addon/auris/lua/whisper/server/sv_whisper_config.lua`
+- `garrysmod_addon/auris/lua/auris/config.lua`
 
 ---
 
@@ -87,7 +87,57 @@ Open the generated solution in `projects/windows/vs2022/` and build in Release.
 
 ## Configuration
 
-Edit `garrysmod_addon/auris/lua/whisper/server/sv_whisper_config.lua` to change the model path, language, thread count, and other options.
+Edit `garrysmod_addon/auris/lua/auris/config.lua` to change the model path, language, thread count, and other options. Every key can also be overridden at runtime via ConVar (`auris_threads`, `auris_language`, `auris_debug`) in `server.cfg` — ConVar values take precedence over the file.
+
+---
+
+## Submodule API
+
+Auris exposes a hook that any addon can listen to:
+
+```lua
+hook.Run("Auris_Transcription", ply, steamid64, text)
+```
+
+| Parameter | Type | Notes |
+|---|---|---|
+| `ply` | `GPlayer` or `nil` | `nil` if the player disconnected before the result arrived |
+| `steamid64` | `string` | Always present |
+| `text` | `string` | Transcribed speech |
+
+### Quick start
+
+Create a new GMod addon with one server-side file:
+
+```lua
+-- lua/autorun/server/sv_myaddon_init.lua
+
+-- timer.Simple(0) defers until all autorun files have loaded,
+-- avoiding load-order issues with Auris.
+timer.Simple(0, function()
+    if not Auris then
+        ErrorNoHalt("[myAddon] Auris core not found\n")
+        return
+    end
+
+    Auris.Subscribe("MyAddon_Feature", function(ply, steamid64, text)
+        local name = IsValid(ply) and ply:Nick() or "Disconnected"
+        Msg("[myAddon] " .. name .. ": " .. text .. "\n")
+    end)
+end)
+```
+
+### Full API reference
+
+See [API.md](API.md) for the complete API, subscriber name conventions, version guards, and the publishing checklist to get your submodule listed here.
+
+### Community submodules
+
+| Addon | Description | Author |
+|---|---|---|
+| *(be the first!)* | | |
+
+To add yours: follow the [publishing guide in API.md](API.md#publishing-your-submodule), then open a [Submit Submodule](https://github.com/ds-kimi/Auris/issues/new?template=submodule.yml) issue.
 
 ---
 
