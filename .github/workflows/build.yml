@@ -254,6 +254,12 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
+      - name: Patch ggml-vulkan.cpp for GCC Properties2 conversion
+        run: |
+          f=vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+          sed -i 's|VkPhysicalDeviceProperties2 props = vkdev\.getProperties2();|vk::PhysicalDeviceProperties2 props = vkdev.getProperties2();|' "$f"
+          grep -q 'vk::PhysicalDeviceProperties2 props = vkdev.getProperties2' "$f"
+
       - name: Compile Vulkan shaders
         run: |
           set -e
@@ -335,6 +341,12 @@ jobs:
           tar -xzf premake-5.0.0-beta4-linux.tar.gz
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Patch ggml-vulkan.cpp for GCC Properties2 conversion
+        run: |
+          f=vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+          sed -i 's|VkPhysicalDeviceProperties2 props = vkdev\.getProperties2();|vk::PhysicalDeviceProperties2 props = vkdev.getProperties2();|' "$f"
+          grep -q 'vk::PhysicalDeviceProperties2 props = vkdev.getProperties2' "$f"
 
       - name: Compile Vulkan shaders
         run: |
