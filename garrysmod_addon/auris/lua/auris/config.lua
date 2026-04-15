@@ -2,7 +2,7 @@
 -- Restart the map after changes for them to take effect.
 
 return {
-    model            = "data/auris/ggml-tiny.en.bin",
+    model            = "garrysmod/data/auris/ggml-tiny.en.bin",
     port             = 4000,
     threads          = 4,
     language         = "en",
