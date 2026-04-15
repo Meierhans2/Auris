@@ -108,7 +108,10 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 			libdirs({vulkan_sdk .. "/Lib"})
 
 		-- Linux: system Vulkan loader
+		-- VULKAN_HPP_TYPESAFE_CONVERSION enables implicit vk:: <-> Vk* handle conversions
+		-- that ggml-vulkan.cpp relies on when mixing C and C++ Vulkan APIs.
 		filter("system:linux")
+			defines({"VULKAN_HPP_TYPESAFE_CONVERSION=1"})
 			links({"vulkan"})
 
 		filter({})
