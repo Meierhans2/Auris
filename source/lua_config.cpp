@@ -1,6 +1,6 @@
-// Lua bindings for whisper config get/set
+// Lua bindings for auris config get/set
 #include "lua_bindings.h"
-#include "whisper_config.h"
+#include "auris_config.h"
 
 using namespace GarrysMod::Lua;
 
@@ -37,7 +37,7 @@ static std::string GetStrField(
     return val;
 }
 
-// whisper.SetConfig(table) -> nil
+// auris.SetConfig(table) -> nil
 LUA_FUNCTION(Whisper_SetConfig) {
     LUA->CheckType(1, Type::Table);
     LUA->Push(1);
@@ -61,7 +61,7 @@ LUA_FUNCTION(Whisper_SetConfig) {
     return 0;
 }
 
-// whisper.GetConfig() -> table
+// auris.GetConfig() -> table
 LUA_FUNCTION(Whisper_GetConfig) {
     WhisperConfig cfg = GetWhisperConfig();
     LUA->CreateTable();

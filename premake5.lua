@@ -10,7 +10,7 @@ local gmcommon = assert(_OPTIONS.gmcommon or os.getenv("GARRYSMOD_COMMON"),
 	"you didn't provide a path to your garrysmod_common (https://github.com/danielga/garrysmod_common) directory")
 include(gmcommon)
 
-CreateWorkspace({name = "whisper", abi_compatible = false, path = "projects/" .. os.target() .. "/" .. _ACTION})
+CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. os.target() .. "/" .. _ACTION})
 	CreateProject({serverside = true, source_path = "source", manual_files = false})
 		warnings("Default")
 		IncludeSDKCommon()

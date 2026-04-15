@@ -1,15 +1,15 @@
-// Lua-facing functions for whisper module
+// Lua-facing functions for auris module
 #include "lua_bindings.h"
-#include "whisper_context.h"
+#include "auris_context.h"
 #include "audio_buffer.h"
 #include "udp_listener.h"
 #include "steam_voice.h"
-#include "whisper_config.h"
+#include "auris_config.h"
 #include "debug_log.h"
 
 using namespace GarrysMod::Lua;
 
-// whisper.Init(modelPath) -> bool
+// auris.Init(modelPath) -> bool
 LUA_FUNCTION(Whisper_Init) {
     const char* path = LUA->CheckString(1);
     if (!InitSteamVoiceDecoder()) {
@@ -20,14 +20,14 @@ LUA_FUNCTION(Whisper_Init) {
     return 1;
 }
 
-// whisper.Listen(port) -> nil
+// auris.Listen(port) -> nil
 LUA_FUNCTION(Whisper_Listen) {
     int port = (int)LUA->CheckNumber(1);
     StartUDPListener(port);
     return 0;
 }
 
-// whisper.Flush(userid) -> nil
+// auris.Flush(userid) -> nil
 // Flushes buffered audio and runs transcription
 LUA_FUNCTION(Whisper_Flush) {
     int userid = (int)LUA->CheckNumber(1);
@@ -37,7 +37,7 @@ LUA_FUNCTION(Whisper_Flush) {
     return 0;
 }
 
-// whisper.FlushAll() -> nil
+// auris.FlushAll() -> nil
 // Queues all active buffers for background transcription
 LUA_FUNCTION(Whisper_FlushAll) {
     auto keys = GetAudioBuffer().GetActiveKeys();
@@ -49,20 +49,20 @@ LUA_FUNCTION(Whisper_FlushAll) {
     return 0;
 }
 
-// whisper.Poll() -> userid, text or nil
+// auris.Poll() -> userid, text or nil
 LUA_FUNCTION(Whisper_Poll) {
     TranscriptResult result;
     if (!PollResult(result)) return 0;
 
     auto sid = GetSteamID64ForKey(result.key);
-    WDEBUG("[Whisper] Poll key=%d sid=%s\n",
+    WDEBUG("[Auris] Poll key=%d sid=%s\n",
         result.key, sid.c_str());
     LUA->PushString(sid.c_str());
     LUA->PushString(result.text.c_str());
     return 2;
 }
 
-// whisper.Shutdown() -> nil
+// auris.Shutdown() -> nil
 LUA_FUNCTION(Whisper_Shutdown) {
     StopUDPListener();
     ShutdownSteamVoiceDecoder();
@@ -70,14 +70,14 @@ LUA_FUNCTION(Whisper_Shutdown) {
     return 0;
 }
 
-// whisper.Debug(bool) -> nil
+// auris.Debug(bool) -> nil
 LUA_FUNCTION(Whisper_Debug) {
     LUA->CheckType(1, GarrysMod::Lua::Type::Bool);
     g_debugEnabled = LUA->GetBool(1);
     return 0;
 }
 
-// whisper.IsDebug() -> bool
+// auris.IsDebug() -> bool
 LUA_FUNCTION(Whisper_IsDebug) {
     LUA->PushBool(g_debugEnabled.load());
     return 1;

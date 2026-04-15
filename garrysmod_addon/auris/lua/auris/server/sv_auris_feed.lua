@@ -1,5 +1,5 @@
 -- Net boundary for end-of-voice signals from the client.
--- Only responsibility: validate sender and trigger whisper flush.
+-- Only responsibility: validate sender and trigger auris flush.
 
 util.AddNetworkString("auris_end_voice")
 
@@ -14,5 +14,5 @@ end
 
 net.Receive("auris_end_voice", function(_, ply)
     if not isValidSender(ply) then return end
-    whisper.FlushAll()
+    auris.FlushAll()
 end)

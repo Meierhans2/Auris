@@ -20,16 +20,16 @@ if exist "%MODULE_DIR%.git" (
 ) else (
     set REPO_ROOT=%MODULE_DIR%..\
 )
-set WHISPER_DIR=%MODULE_DIR%vendor\whisper.cpp
+set VENDOR_WHISPER_DIR=%MODULE_DIR%vendor\whisper.cpp
 set GMCOMMON_DIR=%REPO_ROOT%garrysmod_common
-set SHADERS_DIR=%WHISPER_DIR%\ggml\src\ggml-vulkan\vulkan-shaders
+set SHADERS_DIR=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\vulkan-shaders
 set GEN_SRC=%SHADERS_DIR%\vulkan-shaders-gen.cpp
 set GEN_EXE=%MODULE_DIR%vulkan-shaders-gen.exe
 set SPV_DIR=%MODULE_DIR%shader_spv
 set CPP_DIR=%MODULE_DIR%shader_cpp
-set OUT_CPP=%WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.cpp
-set OUT_HPP=%WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.hpp
-set VULKAN_CPP=%WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan.cpp
+set OUT_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.cpp
+set OUT_HPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.hpp
+set VULKAN_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan.cpp
 
 :: ── [1/8] Auto-detect MSVC ───────────────────────────────────
 where cl.exe >nul 2>&1
@@ -63,7 +63,7 @@ popd
 
 :: ── [4/8] Build whisper.cpp with Vulkan ──────────────────────
 echo [4/8] Building whisper.cpp with Vulkan (this takes a while)...
-pushd "%WHISPER_DIR%"
+pushd "%VENDOR_WHISPER_DIR%"
 cmake -B build -DGGML_VULKAN=1
 if errorlevel 1 ( echo ERROR: cmake configure failed & popd & exit /b 1 )
 cmake --build build -j --config Release

@@ -1,4 +1,4 @@
-// Manages whisper model loading and transcription
+// Manages auris model loading and transcription
 #pragma once
 #include "whisper.h"
 #include <string>

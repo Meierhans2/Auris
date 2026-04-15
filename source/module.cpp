@@ -1,7 +1,7 @@
-// GMod module entry point for gm_whisper
+// GMod module entry point for gm_auris
 #include "GarrysMod/Lua/Interface.h"
 #include "lua_bindings.h"
-#include "whisper_context.h"
+#include "auris_context.h"
 #include "udp_listener.h"
 #include "steam_voice.h"
 
@@ -30,7 +30,7 @@ GMOD_MODULE_OPEN() {
     RegisterFunction(LUA, "SetConfig", Whisper_SetConfig);
     RegisterFunction(LUA, "GetConfig", Whisper_GetConfig);
 
-    LUA->SetField(-2, "whisper");
+    LUA->SetField(-2, "auris");
     LUA->Pop();
 
     return 0;

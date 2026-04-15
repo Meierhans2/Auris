@@ -51,7 +51,9 @@ Download a `ggml-*.bin` Whisper model from:
 
 Place the model on your server in the Garry's Mod data folder:
 
-- `garrysmod/data/whisper/ggml-tiny.en.bin`
+- `garrysmod/data/auris/ggml-tiny.en.bin`
+
+> **Upgrading from a previous release?** Move your model file from `data/whisper/` to `data/auris/`.
 
 If you want to use a different model name or path, update it in:
 

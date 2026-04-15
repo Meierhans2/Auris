@@ -1,4 +1,4 @@
-// Lua function bindings for the whisper module
+// Lua function bindings for the auris module
 #pragma once
 #include "GarrysMod/Lua/Interface.h"
 

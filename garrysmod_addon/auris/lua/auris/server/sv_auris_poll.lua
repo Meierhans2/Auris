@@ -1,5 +1,5 @@
--- Single timer that drains the whisper result queue and dispatches to subscribers.
--- All transcription delivery happens here; submodules never call whisper.Poll().
+-- Single timer that drains the auris result queue and dispatches to subscribers.
+-- All transcription delivery happens here; submodules never call auris.Poll().
 
 -- ply is intentionally nil when the player disconnected before the result arrived.
 -- Submodules that need a live player guard with `if not ply then return end`.
@@ -14,10 +14,10 @@ end
 -- speakers are not artificially spread across timer intervals.
 local function drainQueue()
     if not Auris.IsReady() then return end
-    local sid, text = whisper.Poll()
+    local sid, text = auris.Poll()
     while sid do
         dispatchResult(sid, text)
-        sid, text = whisper.Poll()
+        sid, text = auris.Poll()
     end
 end
 

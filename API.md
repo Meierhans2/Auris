@@ -1,6 +1,6 @@
 # Auris — Submodule API
 
-Auris is a silent platform. It loads whisper, polls transcriptions, and fires a hook. Your addon listens to that hook and does whatever it wants with the result.
+Auris is a silent platform. It loads the transcription module, polls results, and fires a hook. Your addon listens to that hook and does whatever it wants with the result.
 
 ---
 
@@ -33,7 +33,7 @@ Auris.Unsubscribe(name)
 --       single_segment, no_context
 Auris.GetConfig()
 
--- Returns true once whisper has initialised successfully and the poll loop is live.
+-- Returns true once auris has initialised successfully and the poll loop is live.
 Auris.IsReady()
 
 -- Semver string. Guard against breaking changes with a version check.
@@ -158,6 +158,6 @@ All of the following must be true before submitting:
 - Subscriber key prefixed with your addon folder name
 - No ConVar uses the `auris_` prefix
 - Repo README follows the submodule template
-- Addon never calls `whisper.*` directly — only uses the `Auris` API
+- Addon never calls `auris.*` directly — only uses the `Auris` API
 
 Submissions that fail any of these will not be listed.

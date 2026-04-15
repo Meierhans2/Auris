@@ -1,4 +1,4 @@
-// Runtime configuration for whisper transcription
+// Runtime configuration for auris transcription
 #pragma once
 #include <string>
 #include <mutex>

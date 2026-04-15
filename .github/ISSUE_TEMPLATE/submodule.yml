@@ -110,5 +110,5 @@ body:
           required: true
         - label: Repo has a README following the Auris submodule template
           required: true
-        - label: Addon does not call `whisper.*` directly — only uses the `Auris` API
+        - label: Addon does not call `auris.*` directly — only uses the `Auris` API
           required: true

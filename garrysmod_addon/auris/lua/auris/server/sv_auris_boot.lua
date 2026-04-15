@@ -1,9 +1,9 @@
--- Initialises eightbit and the whisper C++ module.
+-- Initialises eightbit and the auris C++ module.
 -- Sets Auris._ready = true only on full success so the poll loop
 -- and submodules have a reliable gate to check before acting.
 
 -- .en.bin models hard-code English; passing a different language to them
--- causes whisper to silently produce garbage output.
+-- causes auris to silently produce garbage output.
 ---@param cfg table
 ---@return string
 local function resolveLanguage(cfg)
@@ -37,14 +37,14 @@ function Auris.Boot()
     local cfg = Auris._config
     bootEightbit(cfg)
 
-    if not whisper.Init(cfg.model) then
+    if not auris.Init(cfg.model) then
         ErrorNoHalt("[Auris] Failed to load model: " .. tostring(cfg.model) .. "\n")
         return
     end
 
-    whisper.SetConfig(buildWhisperConfig(cfg))
-    whisper.Debug(cfg.debug)
-    whisper.Listen(cfg.port)
+    auris.SetConfig(buildWhisperConfig(cfg))
+    auris.Debug(cfg.debug)
+    auris.Listen(cfg.port)
 
     Auris._ready = true
 end

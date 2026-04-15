@@ -1,6 +1,6 @@
-// Whisper model lifecycle and background transcription
-#include "whisper_context.h"
-#include "whisper_config.h"
+// Auris model lifecycle and background transcription
+#include "auris_context.h"
+#include "auris_config.h"
 #include "debug_log.h"
 
 static whisper_context* g_ctx = nullptr;
@@ -29,7 +29,7 @@ static void WorkerLoop() {
         if (job.audio.empty() || !g_ctx) continue;
 
         float dur = (float)job.audio.size() / 16000.0f;
-        WDEBUG("[Whisper] Worker: transcribing %.1fs\n", dur);
+        WDEBUG("[Auris] Worker: transcribing %.1fs\n", dur);
 
         WhisperConfig cfg = GetWhisperConfig();
         whisper_full_params wparams =
@@ -46,7 +46,7 @@ static void WorkerLoop() {
             job.audio.data(), (int)job.audio.size()
         );
         if (ret != 0) {
-            WDEBUG("[Whisper] Worker: whisper_full failed\n");
+            WDEBUG("[Auris] Worker: transcription failed\n");
             continue;
         }
 
@@ -56,7 +56,7 @@ static void WorkerLoop() {
                 whisper_full_get_segment_text(g_ctx, i);
             if (!text || text[0] == '\0') continue;
 
-            WDEBUG("[Whisper] Result: %s\n", text);
+            WDEBUG("[Auris] Result: %s\n", text);
             std::lock_guard<std::mutex> lock(g_resultMutex);
             g_results.push({job.key, std::string(text)});
         }
@@ -72,7 +72,7 @@ bool InitWhisper(const std::string& modelPath) {
 
     g_running = true;
     g_worker = std::thread(WorkerLoop);
-    WDEBUG("[Whisper] Worker thread started\n");
+    WDEBUG("[Auris] Worker thread started\n");
     return true;
 }
 

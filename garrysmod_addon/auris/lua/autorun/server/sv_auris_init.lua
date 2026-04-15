@@ -4,7 +4,7 @@ AddCSLuaFile("autorun/client/cl_auris_init.lua")
 AddCSLuaFile("auris/client/cl_auris_voice.lua")
 
 require("eightbit")
-require("whisper")
+require("auris")
 
 -- Shared files first so Auris global exists before any server file references it.
 include("auris/shared/sh_auris_version.lua")

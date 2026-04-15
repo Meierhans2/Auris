@@ -2,7 +2,7 @@
 -- Must run before sv_auris_boot.lua so Boot() has a valid Auris._config.
 
 local DEFAULTS = {
-    model            = "data/whisper/ggml-tiny.en.bin",
+    model            = "data/auris/ggml-tiny.en.bin",
     port             = 4000,
     threads          = 4,
     language         = "en",

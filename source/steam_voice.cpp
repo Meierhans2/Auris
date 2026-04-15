@@ -1,4 +1,4 @@
-// Decodes steam voice packets to PCM for whisper
+// Decodes steam voice packets to PCM for auris
 #include "steam_voice.h"
 #include <opus.h>
 #include "debug_log.h"
@@ -21,10 +21,10 @@ bool InitSteamVoiceDecoder() {
     int err = 0;
     g_decoder = opus_decoder_create(STEAM_RATE, 1, &err);
     if (err != OPUS_OK || !g_decoder) {
-        WDEBUG("[Whisper] Opus init failed: %d\n", err);
+        WDEBUG("[Auris] Opus init failed: %d\n", err);
         return false;
     }
-    WDEBUG("[Whisper] Opus decoder initialized\n");
+    WDEBUG("[Auris] Opus decoder initialized\n");
     return true;
 }
 
@@ -145,7 +145,7 @@ std::vector<float> DecodeSteamVoice(
             break;
         }
         default:
-            WDEBUG("[Whisper] Unknown opcode %d\n", opcode);
+            WDEBUG("[Auris] Unknown opcode %d\n", opcode);
             return result;
         }
     }
