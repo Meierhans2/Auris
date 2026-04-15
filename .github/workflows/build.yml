@@ -8,9 +8,38 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ── Version gate ──────────────────────────────────────────────
+  check-version:
+    name: Check VERSION changed
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect VERSION change
+        id: check
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # On pull_request compare HEAD vs base; on push compare HEAD vs HEAD~1.
+          # workflow_dispatch always builds.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          elif git diff --name-only HEAD~1 HEAD | grep -qx 'VERSION'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
   # ── Windows 32-bit ────────────────────────────────────────────
   build-win32:
     name: Windows x86
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,6 +126,8 @@ jobs:
   # ── Windows 64-bit ────────────────────────────────────────────
   build-win64:
     name: Windows x86_64
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -191,6 +222,8 @@ jobs:
   # ── Linux 32-bit ──────────────────────────────────────────────
   build-linux32:
     name: Linux x86
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -237,10 +270,8 @@ jobs:
           rm -rf "$SPV_DIR" "$CPP_DIR"
           mkdir -p "$SPV_DIR" "$CPP_DIR"
 
-          # First pass: write the header with all shader names
           "$GEN_EXE" --output-dir "$SPV_DIR" --target-hpp "$OUT_HPP"
 
-          # Per-shader: compile .comp -> .spv -> embed into .cpp
           for f in "$SHADERS_DIR"/*.comp; do
             name=$(basename "$f" .comp)
             "$GEN_EXE" --glslc glslc --source "$f" \
@@ -268,6 +299,8 @@ jobs:
   # ── Linux 64-bit ──────────────────────────────────────────────
   build-linux64:
     name: Linux x86_64
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -344,3 +377,34 @@ jobs:
         with:
           name: gm_auris_linux64
           path: projects/linux/gmake2/**/*.so
+
+  # ── Release ───────────────────────────────────────────────────
+  release:
+    name: Publish Release
+    needs: [check-version, build-win32, build-win64, build-linux32, build-linux64]
+    # Only publish on push to main (not PRs), and only when VERSION changed
+    if: |
+      github.event_name != 'pull_request' &&
+      needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: Auris v${{ needs.check-version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -60,6 +60,7 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 			linkoptions({"/LTCG"})
 
 		filter("toolset:gcc or clang")
+			defines({"_GNU_SOURCE"})
 			buildoptions({"-ffast-math", "-O3", "-flto", "-mavx2", "-fno-stack-protector"})
 			linkoptions({"-flto"})
 
