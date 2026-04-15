@@ -17,10 +17,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Checkout garrysmod_common (default branch)
-        run: |
-          git submodule update --init --recursive garrysmod_common
-
       - name: Install Vulkan SDK
         uses: jakoch/install-vulkan-sdk-action@v1
         with:
@@ -38,7 +34,7 @@ jobs:
       - name: Compile Vulkan shaders
         shell: cmd
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           set VENDOR_WHISPER_DIR=%CD%\vendor\whisper.cpp
           set SHADERS_DIR=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\vulkan-shaders
           set GEN_SRC=%SHADERS_DIR%\vulkan-shaders-gen.cpp
@@ -60,7 +56,6 @@ jobs:
           "%GEN_EXE%" --output-dir "%SPV_DIR%" --target-hpp "%OUT_HPP%"
 
           for %%F in ("%SHADERS_DIR%\*.comp") do (
-            set "NAME=%%~nF"
             "%GEN_EXE%" --glslc "%VULKAN_SDK%\Bin\glslc.exe" --source "%%F" --output-dir "%SPV_DIR%" --target-hpp "%OUT_HPP%" --target-cpp "%CPP_DIR%\%%~nF.cpp"
             if errorlevel 1 exit /b 1
           )
@@ -108,13 +103,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Checkout garrysmod_common (x86-64-support-sourcesdk)
+      - name: Switch garrysmod_common to x86-64-support-sourcesdk
+        shell: bash
         run: |
-          git submodule set-url garrysmod_common https://github.com/danielga/garrysmod_common.git
-          git submodule update --init garrysmod_common
           cd garrysmod_common
           git fetch origin x86-64-support-sourcesdk
-          git checkout x86-64-support-sourcesdk
+          git checkout -B x86-64-support-sourcesdk FETCH_HEAD
           git submodule update --init --recursive
 
       - name: Install Vulkan SDK
@@ -180,7 +174,6 @@ jobs:
 
       - name: Generate VS solution (x86_64)
         shell: cmd
-        # --generator-version=3 required for x86-64-support-sourcesdk branch
         run: premake5.exe --os=windows --gmcommon=./garrysmod_common --generator-version=3 vs2022
 
       - name: Build (Release x64)
@@ -204,20 +197,15 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Checkout garrysmod_common (default branch)
-        run: git submodule update --init --recursive garrysmod_common
-
       - name: Install dependencies (32-bit)
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install -y \
             gcc-multilib g++-multilib \
-            libvulkan-dev:i386 \
-            libvulkan1:i386 \
-            vulkan-tools \
-            glslang-tools \
-            cmake ninja-build
+            libvulkan-dev libvulkan-dev:i386 \
+            shaderc \
+            cmake
 
       - name: Download premake5
         run: |
@@ -228,26 +216,30 @@ jobs:
 
       - name: Compile Vulkan shaders
         run: |
+          set -e
           VENDOR_WHISPER_DIR="$PWD/vendor/whisper.cpp"
           SHADERS_DIR="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/vulkan-shaders"
-          GEN_SRC="$SHADERS_DIR/vulkan-shaders-gen.cpp"
           GEN_EXE="$PWD/vulkan-shaders-gen"
           SPV_DIR="$PWD/shader_spv"
           CPP_DIR="$PWD/shader_cpp"
           OUT_CPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.cpp"
           OUT_HPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp"
 
-          g++ -O2 -std=c++17 -o "$GEN_EXE" "$GEN_SRC"
+          g++ -O2 -std=c++17 -o "$GEN_EXE" "$SHADERS_DIR/vulkan-shaders-gen.cpp"
 
           rm -rf "$SPV_DIR" "$CPP_DIR"
           mkdir -p "$SPV_DIR" "$CPP_DIR"
 
+          # First pass: write the header with all shader names
           "$GEN_EXE" --output-dir "$SPV_DIR" --target-hpp "$OUT_HPP"
 
+          # Per-shader: compile .comp -> .spv -> embed into .cpp
           for f in "$SHADERS_DIR"/*.comp; do
             name=$(basename "$f" .comp)
-            "$GEN_EXE" --glslc glslc --source "$f" --output-dir "$SPV_DIR" \
-              --target-hpp "$OUT_HPP" --target-cpp "$CPP_DIR/$name.cpp"
+            "$GEN_EXE" --glslc glslc --source "$f" \
+              --output-dir "$SPV_DIR" \
+              --target-hpp "$OUT_HPP" \
+              --target-cpp "$CPP_DIR/$name.cpp"
           done
 
           rm -f "$OUT_CPP"
@@ -275,12 +267,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Checkout garrysmod_common (x86-64-support-sourcesdk)
+      - name: Switch garrysmod_common to x86-64-support-sourcesdk
         run: |
-          git submodule update --init garrysmod_common
           cd garrysmod_common
           git fetch origin x86-64-support-sourcesdk
-          git checkout x86-64-support-sourcesdk
+          git checkout -B x86-64-support-sourcesdk FETCH_HEAD
           git submodule update --init --recursive
 
       - name: Install dependencies (64-bit)
@@ -288,9 +279,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libvulkan-dev \
-            vulkan-tools \
-            glslang-tools \
-            cmake ninja-build
+            shaderc \
+            cmake
 
       - name: Download premake5
         run: |
@@ -301,16 +291,16 @@ jobs:
 
       - name: Compile Vulkan shaders
         run: |
+          set -e
           VENDOR_WHISPER_DIR="$PWD/vendor/whisper.cpp"
           SHADERS_DIR="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/vulkan-shaders"
-          GEN_SRC="$SHADERS_DIR/vulkan-shaders-gen.cpp"
           GEN_EXE="$PWD/vulkan-shaders-gen"
           SPV_DIR="$PWD/shader_spv"
           CPP_DIR="$PWD/shader_cpp"
           OUT_CPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.cpp"
           OUT_HPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp"
 
-          g++ -O2 -std=c++17 -o "$GEN_EXE" "$GEN_SRC"
+          g++ -O2 -std=c++17 -o "$GEN_EXE" "$SHADERS_DIR/vulkan-shaders-gen.cpp"
 
           rm -rf "$SPV_DIR" "$CPP_DIR"
           mkdir -p "$SPV_DIR" "$CPP_DIR"
@@ -319,8 +309,10 @@ jobs:
 
           for f in "$SHADERS_DIR"/*.comp; do
             name=$(basename "$f" .comp)
-            "$GEN_EXE" --glslc glslc --source "$f" --output-dir "$SPV_DIR" \
-              --target-hpp "$OUT_HPP" --target-cpp "$CPP_DIR/$name.cpp"
+            "$GEN_EXE" --glslc glslc --source "$f" \
+              --output-dir "$SPV_DIR" \
+              --target-hpp "$OUT_HPP" \
+              --target-cpp "$CPP_DIR/$name.cpp"
           done
 
           rm -f "$OUT_CPP"
@@ -328,7 +320,6 @@ jobs:
           rm -rf "$SPV_DIR" "$CPP_DIR" "$GEN_EXE"
 
       - name: Generate Makefiles (x86_64)
-        # --generator-version=3 required for x86-64-support-sourcesdk branch
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common --generator-version=3 gmake2
 
       - name: Build (Release x86_64)

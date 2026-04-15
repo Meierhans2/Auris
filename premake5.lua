@@ -90,7 +90,8 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 			includedirs({vulkan_sdk .. "/Include"})
 			links({"vulkan-1"})
 
-		filter("system:windows and platforms:x86")
+		-- premake does not support compound filter keys — split into separate filters
+		filter({"system:windows", "platforms:x86"})
 			libdirs({path.getabsolute("vendor/vulkan/lib32")})
 			-- x86 stdcall decorates symbols with @N but the import lib has
 			-- undecorated names. Map the 3 directly-linked Vulkan symbols.
@@ -100,7 +101,7 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 				"/ALTERNATENAME:_vkGetInstanceProcAddr@8=_vkGetInstanceProcAddr",
 			})
 
-		filter("system:windows and platforms:x86_64")
+		filter({"system:windows", "platforms:x86_64"})
 			libdirs({vulkan_sdk .. "/Lib"})
 
 		-- Linux: system Vulkan loader
