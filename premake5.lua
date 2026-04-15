@@ -1,4 +1,10 @@
-PROJECT_GENERATOR_VERSION = 2
+-- Allow CI to override via --generator-version=3 for x86-64-support-sourcesdk branch
+newoption({
+	trigger = "generator-version",
+	description = "garrysmod_common PROJECT_GENERATOR_VERSION (2 = default, 3 = x86-64-support-sourcesdk)",
+	value = "2"
+})
+PROJECT_GENERATOR_VERSION = tonumber(_OPTIONS["generator-version"]) or 2
 
 newoption({
 	trigger = "gmcommon",
@@ -44,12 +50,20 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 			"NDEBUG",
 		})
 
-		-- Optimization for whisper.cpp
+		-- Optimization for whisper.cpp — flags split by toolset
 		optimize("Speed")
 		vectorextensions("AVX2")
-		flags({"NoBufferSecurityCheck"})
-		buildoptions({"/fp:fast", "/Ox", "/GL", "/arch:AVX2"})
-		linkoptions({"/LTCG"})
+
+		filter("toolset:msc*")
+			flags({"NoBufferSecurityCheck"})
+			buildoptions({"/fp:fast", "/Ox", "/GL", "/arch:AVX2"})
+			linkoptions({"/LTCG"})
+
+		filter("toolset:gcc or clang")
+			buildoptions({"-ffast-math", "-O3", "-flto", "-mavx2", "-fno-stack-protector"})
+			linkoptions({"-flto"})
+
+		filter({})
 
 		-- Opus for decoding steam voice
 		includedirs({"vendor/opus/include"})
@@ -60,19 +74,23 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 		filter({})
 		links({"opus"})
 
-		-- Vulkan GPU backend (both 32 and 64 bit)
+		-- Vulkan GPU backend
 		local vulkan_sdk = os.getenv("VULKAN_SDK") or "C:/VulkanSDK/1.4.341.1"
 		defines({"GGML_USE_VULKAN"})
 		includedirs({
-			vulkan_sdk .. "/Include",
 			"vendor/whisper.cpp/ggml/src/ggml-vulkan",
 		})
 		files({
 			"vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan.cpp",
 			"vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan-shaders.cpp",
 		})
-		links({"vulkan-1"})
-		filter("platforms:x86")
+
+		-- Windows: Vulkan SDK headers + import lib
+		filter("system:windows")
+			includedirs({vulkan_sdk .. "/Include"})
+			links({"vulkan-1"})
+
+		filter("system:windows and platforms:x86")
 			libdirs({path.getabsolute("vendor/vulkan/lib32")})
 			-- x86 stdcall decorates symbols with @N but the import lib has
 			-- undecorated names. Map the 3 directly-linked Vulkan symbols.
@@ -81,6 +99,12 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 				"/ALTERNATENAME:_vkGetPhysicalDeviceFeatures2@8=_vkGetPhysicalDeviceFeatures2",
 				"/ALTERNATENAME:_vkGetInstanceProcAddr@8=_vkGetInstanceProcAddr",
 			})
-		filter("platforms:x86_64")
+
+		filter("system:windows and platforms:x86_64")
 			libdirs({vulkan_sdk .. "/Lib"})
+
+		-- Linux: system Vulkan loader
+		filter("system:linux")
+			links({"vulkan"})
+
 		filter({})

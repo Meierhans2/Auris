@@ -1,0 +1,341 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ── Windows 32-bit ────────────────────────────────────────────
+  build-win32:
+    name: Windows x86
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout garrysmod_common (default branch)
+        run: |
+          git submodule update --init --recursive garrysmod_common
+
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: 1.4.309.0
+          install_runtime: false
+          cache: true
+
+      - name: Download premake5
+        run: |
+          $url = "https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-windows.zip"
+          Invoke-WebRequest $url -OutFile premake5.zip
+          Expand-Archive premake5.zip -DestinationPath premake5_bin
+          echo "${{ github.workspace }}\premake5_bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Compile Vulkan shaders
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+          set VENDOR_WHISPER_DIR=%CD%\vendor\whisper.cpp
+          set SHADERS_DIR=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\vulkan-shaders
+          set GEN_SRC=%SHADERS_DIR%\vulkan-shaders-gen.cpp
+          set GEN_EXE=%CD%\vulkan-shaders-gen.exe
+          set SPV_DIR=%CD%\shader_spv
+          set CPP_DIR=%CD%\shader_cpp
+          set OUT_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.cpp
+          set OUT_HPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.hpp
+          set VULKAN_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan.cpp
+
+          cl.exe /nologo /EHsc /O2 /std:c++17 /permissive- /Fe:"%GEN_EXE%" "%GEN_SRC%"
+          if errorlevel 1 exit /b 1
+
+          if exist "%SPV_DIR%" rmdir /s /q "%SPV_DIR%"
+          if exist "%CPP_DIR%" rmdir /s /q "%CPP_DIR%"
+          mkdir "%SPV_DIR%"
+          mkdir "%CPP_DIR%"
+
+          "%GEN_EXE%" --output-dir "%SPV_DIR%" --target-hpp "%OUT_HPP%"
+
+          for %%F in ("%SHADERS_DIR%\*.comp") do (
+            set "NAME=%%~nF"
+            "%GEN_EXE%" --glslc "%VULKAN_SDK%\Bin\glslc.exe" --source "%%F" --output-dir "%SPV_DIR%" --target-hpp "%OUT_HPP%" --target-cpp "%CPP_DIR%\%%~nF.cpp"
+            if errorlevel 1 exit /b 1
+          )
+
+          if exist "%OUT_CPP%" del "%OUT_CPP%"
+          for %%F in ("%CPP_DIR%\*.cpp") do type "%%F" >> "%OUT_CPP%"
+
+          rmdir /s /q "%SPV_DIR%"
+          rmdir /s /q "%CPP_DIR%"
+          del "%GEN_EXE%" 2>nul
+
+          findstr /c:"operator<<(std::ostream" "%VULKAN_CPP%" >nul 2>&1
+          if errorlevel 1 (
+            powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+              "$f = [System.IO.Path]::GetFullPath('%VULKAN_CPP:\=\\%');" ^
+              "$content = [System.IO.File]::ReadAllText($f);" ^
+              "$old = '#include <vulkan/vulkan.hpp>';" ^
+              "$inject = $old + [System.Environment]::NewLine + [System.Environment]::NewLine + '#ifdef _MSC_VER' + [System.Environment]::NewLine + '#include <ostream>' + [System.Environment]::NewLine + 'inline std::ostream& operator<<(std::ostream& os, vk::Buffer const^&) { return os; }' + [System.Environment]::NewLine + '#endif';" ^
+              "$content = $content.Replace($old, $inject);" ^
+              "[System.IO.File]::WriteAllText($f, $content);"
+          )
+
+      - name: Generate VS solution (x86)
+        shell: cmd
+        run: premake5.exe --os=windows --gmcommon=./garrysmod_common vs2022
+
+      - name: Build (Release x86)
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+          msbuild projects\windows\vs2022\auris.sln /p:Configuration=Release /p:Platform=Win32 /m /nologo
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_win32
+          path: projects/windows/vs2022/**/Release/**/*.dll
+
+  # ── Windows 64-bit ────────────────────────────────────────────
+  build-win64:
+    name: Windows x86_64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout garrysmod_common (x86-64-support-sourcesdk)
+        run: |
+          git submodule set-url garrysmod_common https://github.com/danielga/garrysmod_common.git
+          git submodule update --init garrysmod_common
+          cd garrysmod_common
+          git fetch origin x86-64-support-sourcesdk
+          git checkout x86-64-support-sourcesdk
+          git submodule update --init --recursive
+
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: 1.4.309.0
+          install_runtime: false
+          cache: true
+
+      - name: Download premake5
+        run: |
+          $url = "https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-windows.zip"
+          Invoke-WebRequest $url -OutFile premake5.zip
+          Expand-Archive premake5.zip -DestinationPath premake5_bin
+          echo "${{ github.workspace }}\premake5_bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Compile Vulkan shaders
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          set VENDOR_WHISPER_DIR=%CD%\vendor\whisper.cpp
+          set SHADERS_DIR=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\vulkan-shaders
+          set GEN_SRC=%SHADERS_DIR%\vulkan-shaders-gen.cpp
+          set GEN_EXE=%CD%\vulkan-shaders-gen.exe
+          set SPV_DIR=%CD%\shader_spv
+          set CPP_DIR=%CD%\shader_cpp
+          set OUT_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.cpp
+          set OUT_HPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan-shaders.hpp
+          set VULKAN_CPP=%VENDOR_WHISPER_DIR%\ggml\src\ggml-vulkan\ggml-vulkan.cpp
+
+          cl.exe /nologo /EHsc /O2 /std:c++17 /permissive- /Fe:"%GEN_EXE%" "%GEN_SRC%"
+          if errorlevel 1 exit /b 1
+
+          if exist "%SPV_DIR%" rmdir /s /q "%SPV_DIR%"
+          if exist "%CPP_DIR%" rmdir /s /q "%CPP_DIR%"
+          mkdir "%SPV_DIR%"
+          mkdir "%CPP_DIR%"
+
+          "%GEN_EXE%" --output-dir "%SPV_DIR%" --target-hpp "%OUT_HPP%"
+
+          for %%F in ("%SHADERS_DIR%\*.comp") do (
+            "%GEN_EXE%" --glslc "%VULKAN_SDK%\Bin\glslc.exe" --source "%%F" --output-dir "%SPV_DIR%" --target-hpp "%OUT_HPP%" --target-cpp "%CPP_DIR%\%%~nF.cpp"
+            if errorlevel 1 exit /b 1
+          )
+
+          if exist "%OUT_CPP%" del "%OUT_CPP%"
+          for %%F in ("%CPP_DIR%\*.cpp") do type "%%F" >> "%OUT_CPP%"
+
+          rmdir /s /q "%SPV_DIR%"
+          rmdir /s /q "%CPP_DIR%"
+          del "%GEN_EXE%" 2>nul
+
+          findstr /c:"operator<<(std::ostream" "%VULKAN_CPP%" >nul 2>&1
+          if errorlevel 1 (
+            powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+              "$f = [System.IO.Path]::GetFullPath('%VULKAN_CPP:\=\\%');" ^
+              "$content = [System.IO.File]::ReadAllText($f);" ^
+              "$old = '#include <vulkan/vulkan.hpp>';" ^
+              "$inject = $old + [System.Environment]::NewLine + [System.Environment]::NewLine + '#ifdef _MSC_VER' + [System.Environment]::NewLine + '#include <ostream>' + [System.Environment]::NewLine + 'inline std::ostream& operator<<(std::ostream& os, vk::Buffer const^&) { return os; }' + [System.Environment]::NewLine + '#endif';" ^
+              "$content = $content.Replace($old, $inject);" ^
+              "[System.IO.File]::WriteAllText($f, $content);"
+          )
+
+      - name: Generate VS solution (x86_64)
+        shell: cmd
+        # --generator-version=3 required for x86-64-support-sourcesdk branch
+        run: premake5.exe --os=windows --gmcommon=./garrysmod_common --generator-version=3 vs2022
+
+      - name: Build (Release x64)
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          msbuild projects\windows\vs2022\auris.sln /p:Configuration=Release /p:Platform=x64 /m /nologo
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_win64
+          path: projects/windows/vs2022/**/Release/**/*.dll
+
+  # ── Linux 32-bit ──────────────────────────────────────────────
+  build-linux32:
+    name: Linux x86
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout garrysmod_common (default branch)
+        run: git submodule update --init --recursive garrysmod_common
+
+      - name: Install dependencies (32-bit)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-multilib g++-multilib \
+            libvulkan-dev:i386 \
+            libvulkan1:i386 \
+            vulkan-tools \
+            glslang-tools \
+            cmake ninja-build
+
+      - name: Download premake5
+        run: |
+          wget -q https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-linux.tar.gz
+          tar -xzf premake-5.0.0-beta4-linux.tar.gz
+          chmod +x premake5
+          echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Compile Vulkan shaders
+        run: |
+          VENDOR_WHISPER_DIR="$PWD/vendor/whisper.cpp"
+          SHADERS_DIR="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/vulkan-shaders"
+          GEN_SRC="$SHADERS_DIR/vulkan-shaders-gen.cpp"
+          GEN_EXE="$PWD/vulkan-shaders-gen"
+          SPV_DIR="$PWD/shader_spv"
+          CPP_DIR="$PWD/shader_cpp"
+          OUT_CPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.cpp"
+          OUT_HPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp"
+
+          g++ -O2 -std=c++17 -o "$GEN_EXE" "$GEN_SRC"
+
+          rm -rf "$SPV_DIR" "$CPP_DIR"
+          mkdir -p "$SPV_DIR" "$CPP_DIR"
+
+          "$GEN_EXE" --output-dir "$SPV_DIR" --target-hpp "$OUT_HPP"
+
+          for f in "$SHADERS_DIR"/*.comp; do
+            name=$(basename "$f" .comp)
+            "$GEN_EXE" --glslc glslc --source "$f" --output-dir "$SPV_DIR" \
+              --target-hpp "$OUT_HPP" --target-cpp "$CPP_DIR/$name.cpp"
+          done
+
+          rm -f "$OUT_CPP"
+          cat "$CPP_DIR"/*.cpp > "$OUT_CPP"
+          rm -rf "$SPV_DIR" "$CPP_DIR" "$GEN_EXE"
+
+      - name: Generate Makefiles (x86)
+        run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
+
+      - name: Build (Release x86)
+        run: make -C projects/linux/gmake2 config=release_x86 -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_linux32
+          path: projects/linux/gmake2/**/*.so
+
+  # ── Linux 64-bit ──────────────────────────────────────────────
+  build-linux64:
+    name: Linux x86_64
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout garrysmod_common (x86-64-support-sourcesdk)
+        run: |
+          git submodule update --init garrysmod_common
+          cd garrysmod_common
+          git fetch origin x86-64-support-sourcesdk
+          git checkout x86-64-support-sourcesdk
+          git submodule update --init --recursive
+
+      - name: Install dependencies (64-bit)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libvulkan-dev \
+            vulkan-tools \
+            glslang-tools \
+            cmake ninja-build
+
+      - name: Download premake5
+        run: |
+          wget -q https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-linux.tar.gz
+          tar -xzf premake-5.0.0-beta4-linux.tar.gz
+          chmod +x premake5
+          echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Compile Vulkan shaders
+        run: |
+          VENDOR_WHISPER_DIR="$PWD/vendor/whisper.cpp"
+          SHADERS_DIR="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/vulkan-shaders"
+          GEN_SRC="$SHADERS_DIR/vulkan-shaders-gen.cpp"
+          GEN_EXE="$PWD/vulkan-shaders-gen"
+          SPV_DIR="$PWD/shader_spv"
+          CPP_DIR="$PWD/shader_cpp"
+          OUT_CPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.cpp"
+          OUT_HPP="$VENDOR_WHISPER_DIR/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp"
+
+          g++ -O2 -std=c++17 -o "$GEN_EXE" "$GEN_SRC"
+
+          rm -rf "$SPV_DIR" "$CPP_DIR"
+          mkdir -p "$SPV_DIR" "$CPP_DIR"
+
+          "$GEN_EXE" --output-dir "$SPV_DIR" --target-hpp "$OUT_HPP"
+
+          for f in "$SHADERS_DIR"/*.comp; do
+            name=$(basename "$f" .comp)
+            "$GEN_EXE" --glslc glslc --source "$f" --output-dir "$SPV_DIR" \
+              --target-hpp "$OUT_HPP" --target-cpp "$CPP_DIR/$name.cpp"
+          done
+
+          rm -f "$OUT_CPP"
+          cat "$CPP_DIR"/*.cpp > "$OUT_CPP"
+          rm -rf "$SPV_DIR" "$CPP_DIR" "$GEN_EXE"
+
+      - name: Generate Makefiles (x86_64)
+        # --generator-version=3 required for x86-64-support-sourcesdk branch
+        run: ./premake5 --os=linux --gmcommon=./garrysmod_common --generator-version=3 gmake2
+
+      - name: Build (Release x86_64)
+        run: make -C projects/linux/gmake2 config=release_x86_64 -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_linux64
+          path: projects/linux/gmake2/**/*.so
