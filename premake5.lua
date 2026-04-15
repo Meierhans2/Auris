@@ -63,7 +63,7 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 			defines({"_GNU_SOURCE"})
 			-- -ffast-math enables -ffinite-math-only which ggml explicitly forbids
 			-- (vec.h line 1069 #errors on __FINITE_MATH_ONLY__). Use the safe subset instead.
-			buildoptions({"-fno-math-errno", "-funsafe-math-optimizations", "-fno-rounding-math", "-fno-signaling-nans", "-O3", "-flto", "-mavx2", "-fno-stack-protector"})
+			buildoptions({"-fno-math-errno", "-funsafe-math-optimizations", "-fno-rounding-math", "-fno-signaling-nans", "-O3", "-flto", "-mavx2", "-mfma", "-mf16c", "-fno-stack-protector"})
 			linkoptions({"-flto"})
 
 		filter({})
