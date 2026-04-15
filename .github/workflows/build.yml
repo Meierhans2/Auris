@@ -122,6 +122,7 @@ jobs:
         with:
           name: gm_auris_win32
           path: projects/windows/vs2022/**/Release/**/*.dll
+          if-no-files-found: error
 
   # ── Windows 64-bit ────────────────────────────────────────────
   build-win64:
@@ -218,6 +219,7 @@ jobs:
         with:
           name: gm_auris_win64
           path: projects/windows/vs2022/**/Release/**/*.dll
+          if-no-files-found: error
 
   # ── Linux 32-bit ──────────────────────────────────────────────
   build-linux32:
@@ -309,7 +311,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gm_auris_linux32
-          path: projects/linux/gmake2/**/*.so
+          path: projects/linux/gmake2/**/gmsv_auris_linux.dll
+          if-no-files-found: error
 
   # ── Linux 64-bit ──────────────────────────────────────────────
   build-linux64:
@@ -406,7 +409,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gm_auris_linux64
-          path: projects/linux/gmake2/**/*.so
+          path: projects/linux/gmake2/**/gmsv_auris_linux64.dll
+          if-no-files-found: error
 
   # ── Release ───────────────────────────────────────────────────
   release:
@@ -417,6 +421,8 @@ jobs:
       github.event_name != 'pull_request' &&
       needs.check-version.outputs.changed == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
