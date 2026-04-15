@@ -247,6 +247,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y shaderc
 
+      - name: Overlay newer Vulkan headers
+        run: |
+          VK_TAG=v1.3.290
+          git clone --depth 1 --branch $VK_TAG https://github.com/KhronosGroup/Vulkan-Headers.git /tmp/vkh
+          git clone --depth 1 --branch $VK_TAG https://github.com/KhronosGroup/Vulkan-Hpp.git /tmp/vkhpp
+          sudo cp -rf /tmp/vkh/include/vulkan/* /usr/include/vulkan/
+          sudo cp -rf /tmp/vkh/include/vk_video/* /usr/include/vk_video/ 2>/dev/null || true
+          sudo cp -rf /tmp/vkhpp/vulkan/* /usr/include/vulkan/
+
       - name: Download premake5
         run: |
           wget -q https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-linux.tar.gz
@@ -334,6 +343,15 @@ jobs:
             https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
           sudo apt-get update
           sudo apt-get install -y shaderc
+
+      - name: Overlay newer Vulkan headers
+        run: |
+          VK_TAG=v1.3.290
+          git clone --depth 1 --branch $VK_TAG https://github.com/KhronosGroup/Vulkan-Headers.git /tmp/vkh
+          git clone --depth 1 --branch $VK_TAG https://github.com/KhronosGroup/Vulkan-Hpp.git /tmp/vkhpp
+          sudo cp -rf /tmp/vkh/include/vulkan/* /usr/include/vulkan/
+          sudo cp -rf /tmp/vkh/include/vk_video/* /usr/include/vk_video/ 2>/dev/null || true
+          sudo cp -rf /tmp/vkhpp/vulkan/* /usr/include/vulkan/
 
       - name: Download premake5
         run: |
