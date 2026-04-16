@@ -12,6 +12,14 @@ setlocal enabledelayedexpansion
 ::   - Visual Studio with VC tools
 :: ============================================================
 
+set CPU_ONLY=0
+for %%A in (%*) do if /i "%%A"=="--cpu-only" set CPU_ONLY=1
+
+if "%CPU_ONLY%"=="0" (
+    set /p GPU_ANS=GPU support (Vulkan)? [y/n]:
+    if /i "!GPU_ANS!"=="n" set CPU_ONLY=1
+)
+
 set MODULE_DIR=%~dp0
 :: Repo root is either the module dir itself (bat copied to root)
 :: or one level up (bat stays in module/ subdir)
@@ -61,8 +69,21 @@ git submodule update --init --recursive
 if errorlevel 1 ( echo ERROR: garrysmod_common submodules failed & popd & exit /b 1 )
 popd
 
-:: ── [4/8] Build whisper.cpp with Vulkan ──────────────────────
-echo [4/8] Building whisper.cpp with Vulkan (this takes a while)...
+:: ── [4/8] Build whisper.cpp ───────────────────────────────────
+if "%CPU_ONLY%"=="1" (
+    echo [4/8] Building whisper.cpp ^(CPU only^)...
+    pushd "%VENDOR_WHISPER_DIR%"
+    cmake -B build
+    if errorlevel 1 ( echo ERROR: cmake configure failed & popd & exit /b 1 )
+    cmake --build build -j --config Release
+    if errorlevel 1 ( echo ERROR: cmake build failed & popd & exit /b 1 )
+    popd
+    echo.
+    echo Setup complete ^(CPU only^). Now run premake to generate the VS solution.
+    exit /b 0
+)
+
+echo [4/8] Building whisper.cpp with Vulkan ^(this takes a while^)...
 pushd "%VENDOR_WHISPER_DIR%"
 cmake -B build -DGGML_VULKAN=1
 if errorlevel 1 ( echo ERROR: cmake configure failed & popd & exit /b 1 )

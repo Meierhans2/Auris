@@ -1,6 +1,6 @@
 # Building Auris
 
-> **First time?** Run `RUN_ONCE.bat` from the repo root before anything else — it compiles Vulkan shaders and patches vendor files.
+> **First time?** Run `RUN_ONCE.bat` (Windows) or `./RUN_ONCE.sh` (Linux) from the repo root before anything else — it compiles Vulkan shaders and patches vendor files.
 
 ---
 
@@ -90,8 +90,8 @@ Open `projects/windows/vs2022/` → build **Release | x64**
 ### CPU-only · 32-bit
 
 ```sh
-premake5 --os=linux --gmcommon=./garrysmod_common gmake2
-cd projects/linux/gmake2
+./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
+cd projects/linux/make
 make
 ```
 
@@ -100,8 +100,8 @@ make
 ### CPU-only · 64-bit
 
 ```sh
-premake5 --os=linux --gmcommon=./garrysmod_common --generator-version=3 gmake2
-cd projects/linux/gmake2
+./premake5 --os=linux --gmcommon=./garrysmod_common --generator-version=3 gmake2
+cd projects/linux/make
 make config=release_x86_64
 ```
 
@@ -110,8 +110,8 @@ make config=release_x86_64
 ### GPU (Vulkan) · 32-bit
 
 ```sh
-premake5 --os=linux --gmcommon=./garrysmod_common --with-vulkan gmake2
-cd projects/linux/gmake2
+./premake5 --os=linux --gmcommon=./garrysmod_common --with-vulkan gmake2
+cd projects/linux/make
 make
 ```
 
@@ -120,8 +120,8 @@ make
 ### GPU (Vulkan) · 64-bit
 
 ```sh
-premake5 --os=linux --gmcommon=./garrysmod_common --with-vulkan --generator-version=3 gmake2
-cd projects/linux/gmake2
+./premake5 --os=linux --gmcommon=./garrysmod_common --with-vulkan --generator-version=3 gmake2
+cd projects/linux/make
 make config=release_x86_64
 ```
 
@@ -136,7 +136,7 @@ make config=release_x86_64
 | Linux | 32-bit | `gmsv_auris_linux.dll` | `gmsv_auris-gpu_linux.dll` |
 | Linux | 64-bit | `gmsv_auris_linux64.dll` | `gmsv_auris-gpu_linux64.dll` |
 
-Place the built `.dll` / `.so` in your server's `garrysmod/lua/bin/` directory.
+Place the built `.dll` in your server's `garrysmod/lua/bin/` directory.
 
 ---
 
