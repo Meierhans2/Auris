@@ -4,10 +4,14 @@ Auris is a silent platform. It loads the transcription module, polls results, an
 
 ---
 
-## The Hook
+## Receiving Transcriptions
+
+Register a callback with `Auris.Subscribe`. Auris calls it once per transcription result.
 
 ```lua
-hook.Run("Auris_Transcription", ply, steamid64, text)
+Auris.Subscribe("MyAddon_Feature", function(ply, steamid64, text)
+    -- your logic here
+end)
 ```
 
 | Parameter | Type | Notes |
@@ -15,6 +19,8 @@ hook.Run("Auris_Transcription", ply, steamid64, text)
 | `ply` | `GPlayer` or `nil` | `nil` if the player disconnected before the result arrived |
 | `steamid64` | `string` | Always present — use this as your reliable identifier |
 | `text` | `string` | The transcribed speech. May be whitespace-only (whisper hallucination) |
+
+> **Note:** Internally Auris fires `hook.Run("Auris_Transcription", ...)`. Do not use `hook.Add` on this hook directly — `Auris.Subscribe` adds duplicate-detection and namespacing that raw `hook.Add` skips.
 
 ---
 
