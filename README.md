@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Real-time voice transcription for Garry’s Mod servers</strong><br>
-  <sub>gm_8bit · Opus · whisper.cpp · extensible submodule API</sub>
+  <sub>Opus · whisper.cpp · extensible submodule API</sub>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 
 <br>
 
-Captures player voice chat via [gm_8bit](https://github.com/Meachamp/gm_8bit), decodes Opus audio, and transcribes it in real time using whisper.cpp. Auris is a silent platform — it does nothing by default except make transcriptions available. What happens with them is up to submodule addons.
+Captures player voice chat via an in-process `SV_BroadcastVoiceData` detour, decodes Opus audio, and transcribes it in real time using whisper.cpp. Auris is a silent platform — it does nothing by default except make transcriptions available. What happens with them is up to submodule addons.
 
 ---
 
@@ -33,11 +33,8 @@ Watch Auris transcribe Garry's Mod voice chat in real time.
 
 ## Requirements
 
-- [gm_8bit](https://github.com/Meachamp/gm_8bit) binary module (thanks to Meachamp for creating it)
-- Vulkan-capable GPU (NVIDIA or AMD)
 - [Git](https://git-scm.com/)
-- [CMake](https://cmake.org/)
-- [Vulkan SDK](https://vulkan.lunarg.com/) 1.4.341.1 or newer
+- [Vulkan SDK](https://vulkan.lunarg.com/) 1.4.341.1 or newer *(GPU builds only)*
 - [Visual Studio](https://visualstudio.microsoft.com/) with C++ build tools
 - whisper.cpp model file (see "Models" below)
 

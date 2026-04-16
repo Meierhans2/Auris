@@ -3,8 +3,6 @@ AddCSLuaFile("auris/shared/sh_auris_api.lua")
 AddCSLuaFile("autorun/client/cl_auris_init.lua")
 AddCSLuaFile("auris/client/cl_auris_voice.lua")
 
-require("eightbit")
-
 -- file.Find with wildcard covers platform suffixes (win64, linux64, etc.)
 -- avoids the engine-level "File not found" print that pcall cannot suppress.
 local function moduleExists(name)

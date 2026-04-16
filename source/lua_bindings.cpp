@@ -2,7 +2,7 @@
 #include "lua_bindings.h"
 #include "auris_context.h"
 #include "audio_buffer.h"
-#include "udp_listener.h"
+#include "voice_hook.h"
 #include "steam_voice.h"
 #include "auris_config.h"
 #include "debug_log.h"
@@ -16,15 +16,12 @@ LUA_FUNCTION(Whisper_Init) {
         LUA->PushBool(false);
         return 1;
     }
+    if (!InstallVoiceHook()) {
+        LUA->PushBool(false);
+        return 1;
+    }
     LUA->PushBool(InitWhisper(path));
     return 1;
-}
-
-// auris.Listen(port) -> nil
-LUA_FUNCTION(Whisper_Listen) {
-    int port = (int)LUA->CheckNumber(1);
-    StartUDPListener(port);
-    return 0;
 }
 
 // auris.Flush(userid) -> nil
@@ -64,7 +61,7 @@ LUA_FUNCTION(Whisper_Poll) {
 
 // auris.Shutdown() -> nil
 LUA_FUNCTION(Whisper_Shutdown) {
-    StopUDPListener();
+    UninstallVoiceHook();
     ShutdownSteamVoiceDecoder();
     ShutdownWhisper();
     return 0;

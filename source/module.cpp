@@ -2,7 +2,7 @@
 #include "GarrysMod/Lua/Interface.h"
 #include "lua_bindings.h"
 #include "auris_context.h"
-#include "udp_listener.h"
+#include "voice_hook.h"
 #include "steam_voice.h"
 
 using namespace GarrysMod::Lua;
@@ -20,8 +20,7 @@ GMOD_MODULE_OPEN() {
     LUA->CreateTable();
 
     RegisterFunction(LUA, "Init", Whisper_Init);
-    RegisterFunction(LUA, "Listen", Whisper_Listen);
-    RegisterFunction(LUA, "Flush", Whisper_Flush);
+RegisterFunction(LUA, "Flush", Whisper_Flush);
     RegisterFunction(LUA, "FlushAll", Whisper_FlushAll);
     RegisterFunction(LUA, "Poll", Whisper_Poll);
     RegisterFunction(LUA, "Shutdown", Whisper_Shutdown);
@@ -37,7 +36,7 @@ GMOD_MODULE_OPEN() {
 }
 
 GMOD_MODULE_CLOSE() {
-    StopUDPListener();
+    UninstallVoiceHook();
     ShutdownSteamVoiceDecoder();
     ShutdownWhisper();
     return 0;

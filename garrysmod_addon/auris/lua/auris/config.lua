@@ -16,9 +16,6 @@ return {
     -- .en.bin variants are English-only but faster than the multilingual equivalents.
     model = "garrysmod/data/auris/ggml-tiny.en.bin",
 
-    -- UDP port eightbit broadcasts voice data on. Must match eightbit config.
-    port = 4000,
-
     -- CPU threads for Whisper inference.
     -- Raise to speed up transcription on servers with spare cores.
     -- Going beyond physical core count gives no benefit and wastes context switches.

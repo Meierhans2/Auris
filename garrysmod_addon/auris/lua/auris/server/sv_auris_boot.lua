@@ -1,4 +1,4 @@
--- Initialises eightbit and the auris C++ module.
+-- Initialises the auris C++ module.
 -- Sets Auris._ready = true only on full success so the poll loop
 -- and submodules have a reliable gate to check before acting.
 
@@ -69,18 +69,8 @@ local function buildWhisperConfig(cfg)
     }
 end
 
----@param cfg table
----@return boolean
-local function bootEightbit(cfg)
-    eightbit.SetBroadcastIP("127.0.0.1")
-    eightbit.SetBroadcastPort(cfg.port)
-    eightbit.EnableBroadcast(true)
-    return true
-end
-
 function Auris.Boot()
     local cfg = Auris._config
-    bootEightbit(cfg)
 
     if not auris.Init(cfg.model) then
         ErrorNoHalt("[Auris] Failed to load model: " .. tostring(cfg.model) .. "\n")
@@ -89,7 +79,6 @@ function Auris.Boot()
 
     auris.SetConfig(buildWhisperConfig(cfg))
     auris.Debug(cfg.debug)
-    auris.Listen(cfg.port)
 
     Auris._ready = true
 end

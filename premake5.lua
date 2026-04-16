@@ -32,6 +32,7 @@ CreateWorkspace({name = module_name, abi_compatible = false, path = "projects/" 
 		IncludeSteamAPI()
 		IncludeDetouring()
 		IncludeScanning()
+		IncludeHelpersExtended()
 
 		-- whisper.cpp vendor files
 		includedirs({

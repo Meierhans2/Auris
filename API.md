@@ -35,7 +35,7 @@ Auris.Subscribe(name, callback)
 Auris.Unsubscribe(name)
 
 -- Returns a shallow copy of the active config table. Do not mutate it.
--- Keys: model, port, threads, language, debug, print_progress, print_timestamps,
+-- Keys: model, threads, language, debug, print_progress, print_timestamps,
 --       single_segment, no_context
 Auris.GetConfig()
 
