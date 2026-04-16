@@ -63,19 +63,16 @@ If you want to use a different model name or path, update it in:
 
 ## Building the module
 
-Run the setup script once from the repo root to compile shaders and patch vendor files:
+See **[BUILD.md](BUILD.md)** for the full build guide — all platforms, architectures, CPU vs GPU variants, and flag reference.
+
+**Quick start (Windows, CPU-only):**
 
 ```
 RUN_ONCE.bat
-```
-
-Then generate the Visual Studio solution:
-
-```
 premake5.exe --os=windows --gmcommon=./garrysmod_common vs2022
 ```
 
-Open the generated solution in `projects/windows/vs2022/` and build in Release.
+Open `projects/windows/vs2022/` and build in Release.
 
 ---
 
@@ -137,7 +134,7 @@ See [API.md](API.md) for the complete API, subscriber name conventions, version 
 
 | Addon | Description | Author |
 |---|---|---|
-| *(be the first!)* | | |
+| [auris-logger](garrysmod_addon/logger/) | Prints every transcription to the server console with player name and SteamID64 | [ds-kimi](https://github.com/ds-kimi) |
 
 To add yours: follow the [publishing guide in API.md](API.md#publishing-your-submodule), then open a [Submit Submodule](https://github.com/ds-kimi/Auris/issues/new?template=submodule.yml) issue.
 

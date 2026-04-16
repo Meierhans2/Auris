@@ -35,9 +35,9 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-  # ── Windows 32-bit ────────────────────────────────────────────
-  build-win32:
-    name: Windows x86
+  # ── Windows 32-bit GPU ────────────────────────────────────────
+  build-win32-gpu:
+    name: Windows x86 (GPU)
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
     runs-on: windows-latest
@@ -109,24 +109,24 @@ jobs:
 
       - name: Generate VS solution (x86)
         shell: cmd
-        run: premake5.exe --os=windows --gmcommon=./garrysmod_common vs2022
+        run: premake5.exe --os=windows --gmcommon=./garrysmod_common --with-vulkan vs2022
 
       - name: Build (Release x86)
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-          msbuild projects\windows\vs2022\auris.sln /p:Configuration=Release /p:Platform=Win32 /m /nologo
+          msbuild projects\windows\vs2022\auris-gpu.sln /p:Configuration=Release /p:Platform=Win32 /m /nologo
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gm_auris_win32
+          name: gm_auris_win32_gpu
           path: projects/windows/vs2022/**/Release/**/*.dll
           if-no-files-found: error
 
-  # ── Windows 64-bit ────────────────────────────────────────────
-  build-win64:
-    name: Windows x86_64
+  # ── Windows 64-bit GPU ────────────────────────────────────────
+  build-win64-gpu:
+    name: Windows x86_64 (GPU)
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
     runs-on: windows-latest
@@ -206,24 +206,24 @@ jobs:
 
       - name: Generate VS solution (x86_64)
         shell: cmd
-        run: premake5.exe --os=windows --gmcommon=./garrysmod_common --generator-version=3 vs2022
+        run: premake5.exe --os=windows --gmcommon=./garrysmod_common --generator-version=3 --with-vulkan vs2022
 
       - name: Build (Release x64)
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          msbuild projects\windows\vs2022\auris.sln /p:Configuration=Release /p:Platform=x64 /m /nologo
+          msbuild projects\windows\vs2022\auris-gpu.sln /p:Configuration=Release /p:Platform=x64 /m /nologo
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gm_auris_win64
+          name: gm_auris_win64_gpu
           path: projects/windows/vs2022/**/Release/**/*.dll
           if-no-files-found: error
 
-  # ── Linux 32-bit ──────────────────────────────────────────────
-  build-linux32:
-    name: Linux x86
+  # ── Linux 32-bit GPU ──────────────────────────────────────────
+  build-linux32-gpu:
+    name: Linux x86 (GPU)
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
     runs-on: ubuntu-22.04
@@ -302,7 +302,7 @@ jobs:
           rm -rf "$SPV_DIR" "$CPP_DIR" "$GEN_EXE"
 
       - name: Generate Makefiles (x86)
-        run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
+        run: ./premake5 --os=linux --gmcommon=./garrysmod_common --with-vulkan gmake2
 
       - name: Build (Release x86)
         run: make -C projects/linux/gmake2 config=release_x86 -j$(nproc)
@@ -310,13 +310,13 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gm_auris_linux32
-          path: projects/linux/gmake2/**/gmsv_auris_linux.dll
+          name: gm_auris_linux32_gpu
+          path: projects/linux/gmake2/**/gmsv_auris-gpu_linux.dll
           if-no-files-found: error
 
-  # ── Linux 64-bit ──────────────────────────────────────────────
-  build-linux64:
-    name: Linux x86_64
+  # ── Linux 64-bit GPU ──────────────────────────────────────────
+  build-linux64-gpu:
+    name: Linux x86_64 (GPU)
     needs: check-version
     if: needs.check-version.outputs.changed == 'true'
     runs-on: ubuntu-22.04
@@ -400,6 +400,159 @@ jobs:
           rm -rf "$SPV_DIR" "$CPP_DIR" "$GEN_EXE"
 
       - name: Generate Makefiles (x86_64)
+        run: ./premake5 --os=linux --gmcommon=./garrysmod_common --generator-version=3 --with-vulkan gmake2
+
+      - name: Build (Release x86_64)
+        run: make -C projects/linux/gmake2 config=release_x86_64 -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_linux64_gpu
+          path: projects/linux/gmake2/**/gmsv_auris-gpu_linux64.dll
+          if-no-files-found: error
+
+  # ── Windows 32-bit CPU ────────────────────────────────────────
+  build-win32-cpu:
+    name: Windows x86 (CPU)
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download premake5
+        run: |
+          $url = "https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-windows.zip"
+          Invoke-WebRequest $url -OutFile premake5.zip
+          Expand-Archive premake5.zip -DestinationPath premake5_bin
+          echo "${{ github.workspace }}\premake5_bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Generate VS solution (x86)
+        shell: cmd
+        run: premake5.exe --os=windows --gmcommon=./garrysmod_common vs2022
+
+      - name: Build (Release x86)
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+          msbuild projects\windows\vs2022\auris.sln /p:Configuration=Release /p:Platform=Win32 /m /nologo
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_win32_cpu
+          path: projects/windows/vs2022/**/Release/**/*.dll
+          if-no-files-found: error
+
+  # ── Windows 64-bit CPU ────────────────────────────────────────
+  build-win64-cpu:
+    name: Windows x86_64 (CPU)
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Switch garrysmod_common to x86-64-support-sourcesdk
+        shell: bash
+        run: |
+          cd garrysmod_common
+          git fetch origin x86-64-support-sourcesdk
+          git checkout -B x86-64-support-sourcesdk FETCH_HEAD
+          git submodule update --init --recursive
+
+      - name: Download premake5
+        run: |
+          $url = "https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-windows.zip"
+          Invoke-WebRequest $url -OutFile premake5.zip
+          Expand-Archive premake5.zip -DestinationPath premake5_bin
+          echo "${{ github.workspace }}\premake5_bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Generate VS solution (x86_64)
+        shell: cmd
+        run: premake5.exe --os=windows --gmcommon=./garrysmod_common --generator-version=3 vs2022
+
+      - name: Build (Release x64)
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          msbuild projects\windows\vs2022\auris.sln /p:Configuration=Release /p:Platform=x64 /m /nologo
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_win64_cpu
+          path: projects/windows/vs2022/**/Release/**/*.dll
+          if-no-files-found: error
+
+  # ── Linux 32-bit CPU ──────────────────────────────────────────
+  build-linux32-cpu:
+    name: Linux x86 (CPU)
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies (32-bit)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib
+
+      - name: Download premake5
+        run: |
+          wget -q https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-linux.tar.gz
+          tar -xzf premake-5.0.0-beta4-linux.tar.gz
+          chmod +x premake5
+          echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Generate Makefiles (x86)
+        run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
+
+      - name: Build (Release x86)
+        run: make -C projects/linux/gmake2 config=release_x86 -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm_auris_linux32_cpu
+          path: projects/linux/gmake2/**/gmsv_auris_linux.dll
+          if-no-files-found: error
+
+  # ── Linux 64-bit CPU ──────────────────────────────────────────
+  build-linux64-cpu:
+    name: Linux x86_64 (CPU)
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Switch garrysmod_common to x86-64-support-sourcesdk
+        run: |
+          cd garrysmod_common
+          git fetch origin x86-64-support-sourcesdk
+          git checkout -B x86-64-support-sourcesdk FETCH_HEAD
+          git submodule update --init --recursive
+
+      - name: Download premake5
+        run: |
+          wget -q https://github.com/premake/premake-core/releases/download/v5.0.0-beta4/premake-5.0.0-beta4-linux.tar.gz
+          tar -xzf premake-5.0.0-beta4-linux.tar.gz
+          chmod +x premake5
+          echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Generate Makefiles (x86_64)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common --generator-version=3 gmake2
 
       - name: Build (Release x86_64)
@@ -408,14 +561,23 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gm_auris_linux64
+          name: gm_auris_linux64_cpu
           path: projects/linux/gmake2/**/gmsv_auris_linux64.dll
           if-no-files-found: error
 
   # ── Release ───────────────────────────────────────────────────
   release:
     name: Publish Release
-    needs: [check-version, build-win32, build-win64, build-linux32, build-linux64]
+    needs:
+      - check-version
+      - build-win32-gpu
+      - build-win64-gpu
+      - build-linux32-gpu
+      - build-linux64-gpu
+      - build-win32-cpu
+      - build-win64-cpu
+      - build-linux32-cpu
+      - build-linux64-cpu
     # Only publish on push to main (not PRs), and only when VERSION changed
     if: |
       github.event_name != 'pull_request' &&
@@ -434,6 +596,30 @@ jobs:
       - name: List artifacts
         run: find artifacts -type f
 
+      - name: Group + zip artifacts (GPU/ vs CPU/)
+        run: |
+          set -e
+          VERSION="${{ needs.check-version.outputs.version }}"
+          mkdir -p release/GPU release/CPU
+          # Flatten each artifact dir to just its .dll files, then zip.
+          # upload-artifact preserves the deep build path; users want a flat zip.
+          for d in artifacts/*/; do
+            name=$(basename "$d")
+            case "$name" in
+              *_gpu) variant=GPU ;;
+              *_cpu) variant=CPU ;;
+              *) echo "Skipping unknown artifact $name" >&2; continue ;;
+            esac
+            base="${name%_gpu}"
+            base="${base%_cpu}"
+            staging=$(mktemp -d)
+            find "$d" -type f -name '*.dll' -exec cp {} "$staging/" \;
+            zipname="auris-v${VERSION}-${base}-$(echo $variant | tr '[:upper:]' '[:lower:]').zip"
+            (cd "$staging" && zip -j "$GITHUB_WORKSPACE/release/$variant/$zipname" *.dll)
+            rm -rf "$staging"
+          done
+          find release -type f
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -441,6 +627,8 @@ jobs:
           name: Auris v${{ needs.check-version.outputs.version }}
           draft: false
           prerelease: false
-          files: artifacts/**/*
+          files: |
+            release/GPU/*.zip
+            release/CPU/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

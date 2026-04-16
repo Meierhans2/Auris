@@ -12,11 +12,18 @@ newoption({
 	value = "../garrysmod_common"
 })
 
+newoption({
+	trigger = "with-vulkan",
+	description = "Enable the Vulkan GPU backend (off by default; CPU-only build)"
+})
+local WITH_VULKAN = _OPTIONS["with-vulkan"] ~= nil
+
 local gmcommon = assert(_OPTIONS.gmcommon or os.getenv("GARRYSMOD_COMMON"),
 	"you didn't provide a path to your garrysmod_common (https://github.com/danielga/garrysmod_common) directory")
 include(gmcommon)
 
-CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. os.target() .. "/" .. _ACTION})
+local module_name = WITH_VULKAN and "auris-gpu" or "auris"
+CreateWorkspace({name = module_name, abi_compatible = false, path = "projects/" .. os.target() .. "/" .. _ACTION})
 	CreateProject({serverside = true, source_path = "source", manual_files = false})
 		warnings("Default")
 		IncludeSDKCommon()
@@ -77,41 +84,45 @@ CreateWorkspace({name = "auris", abi_compatible = false, path = "projects/" .. o
 		filter({})
 		links({"opus"})
 
-		-- Vulkan GPU backend
-		local vulkan_sdk = os.getenv("VULKAN_SDK") or "C:/VulkanSDK/1.4.341.1"
-		defines({"GGML_USE_VULKAN"})
-		includedirs({
-			"vendor/whisper.cpp/ggml/src/ggml-vulkan",
-		})
-		files({
-			"vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan.cpp",
-			"vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan-shaders.cpp",
-		})
-
-		-- Windows: Vulkan SDK headers + import lib
-		filter("system:windows")
-			includedirs({vulkan_sdk .. "/Include"})
-			links({"vulkan-1"})
-
-		-- premake does not support compound filter keys — split into separate filters
-		filter({"system:windows", "platforms:x86"})
-			libdirs({path.getabsolute("vendor/vulkan/lib32")})
-			-- x86 stdcall decorates symbols with @N but the import lib has
-			-- undecorated names. Map the 3 directly-linked Vulkan symbols.
-			linkoptions({
-				"/ALTERNATENAME:_vkCmdCopyBuffer@28=_vkCmdCopyBuffer",
-				"/ALTERNATENAME:_vkGetPhysicalDeviceFeatures2@8=_vkGetPhysicalDeviceFeatures2",
-				"/ALTERNATENAME:_vkGetInstanceProcAddr@8=_vkGetInstanceProcAddr",
+		-- Vulkan GPU backend (opt-in via --with-vulkan)
+		-- Without this flag the module is CPU-only and has no libvulkan dep,
+		-- so it loads on headless dedis with no Vulkan loader installed.
+		if WITH_VULKAN then
+			local vulkan_sdk = os.getenv("VULKAN_SDK") or "C:/VulkanSDK/1.4.341.1"
+			defines({"GGML_USE_VULKAN"})
+			includedirs({
+				"vendor/whisper.cpp/ggml/src/ggml-vulkan",
+			})
+			files({
+				"vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan.cpp",
+				"vendor/whisper.cpp/ggml/src/ggml-vulkan/ggml-vulkan-shaders.cpp",
 			})
 
-		filter({"system:windows", "platforms:x86_64"})
-			libdirs({vulkan_sdk .. "/Lib"})
+			-- Windows: Vulkan SDK headers + import lib
+			filter("system:windows")
+				includedirs({vulkan_sdk .. "/Include"})
+				links({"vulkan-1"})
 
-		-- Linux: system Vulkan loader
-		-- VULKAN_HPP_TYPESAFE_CONVERSION enables implicit vk:: <-> Vk* handle conversions
-		-- that ggml-vulkan.cpp relies on when mixing C and C++ Vulkan APIs.
-		filter("system:linux")
-			defines({"VULKAN_HPP_TYPESAFE_CONVERSION=1"})
-			links({"vulkan"})
+			-- premake does not support compound filter keys — split into separate filters
+			filter({"system:windows", "platforms:x86"})
+				libdirs({path.getabsolute("vendor/vulkan/lib32")})
+				-- x86 stdcall decorates symbols with @N but the import lib has
+				-- undecorated names. Map the 3 directly-linked Vulkan symbols.
+				linkoptions({
+					"/ALTERNATENAME:_vkCmdCopyBuffer@28=_vkCmdCopyBuffer",
+					"/ALTERNATENAME:_vkGetPhysicalDeviceFeatures2@8=_vkGetPhysicalDeviceFeatures2",
+					"/ALTERNATENAME:_vkGetInstanceProcAddr@8=_vkGetInstanceProcAddr",
+				})
 
-		filter({})
+			filter({"system:windows", "platforms:x86_64"})
+				libdirs({vulkan_sdk .. "/Lib"})
+
+			-- Linux: system Vulkan loader
+			-- VULKAN_HPP_TYPESAFE_CONVERSION enables implicit vk:: <-> Vk* handle conversions
+			-- that ggml-vulkan.cpp relies on when mixing C and C++ Vulkan APIs.
+			filter("system:linux")
+				defines({"VULKAN_HPP_TYPESAFE_CONVERSION=1"})
+				links({"vulkan"})
+
+			filter({})
+		end
