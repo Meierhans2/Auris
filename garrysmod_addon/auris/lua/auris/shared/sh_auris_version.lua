@@ -4,4 +4,4 @@
 Auris = Auris or {}
 
 ---@type string
-Auris.VERSION = "2.0.0"
+Auris.VERSION = "1.0.7"
