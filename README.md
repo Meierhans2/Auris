@@ -134,7 +134,8 @@ See [API.md](API.md) for the complete API, subscriber name conventions, version 
 
 | Addon | Description | Author |
 |---|---|---|
-| [auris-logger](garrysmod_addon/logger/) | Prints every transcription to the server console with player name and SteamID64 | [ds-kimi](https://github.com/ds-kimi) |
+| [auris-logger](garrysmod_addon/auris-logger/) | Prints every transcription to the server console with player name and SteamID64 | [ds-kimi](https://github.com/ds-kimi) |
+| [auris-discord](garrysmod_addon/auris-discord/) | Forwards every transcription to a Discord webhook (requires [gmsv_reqwest](https://github.com/williamvenner/gmsv_reqwest)) | [ds-kimi](https://github.com/ds-kimi) |
 
 To add yours: follow the [publishing guide in API.md](API.md#publishing-your-submodule), then open a [Submit Submodule](https://github.com/ds-kimi/Auris/issues/new?template=submodule.yml) issue.
 
