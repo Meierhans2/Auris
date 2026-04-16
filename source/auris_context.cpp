@@ -32,14 +32,62 @@ static void WorkerLoop() {
         WDEBUG("[Auris] Worker: transcribing %.1fs\n", dur);
 
         WhisperConfig cfg = GetWhisperConfig();
-        whisper_full_params wparams =
-            whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-        wparams.print_progress = cfg.print_progress;
+        whisper_full_params wparams = whisper_full_default_params(
+            cfg.use_beam_search
+                ? WHISPER_SAMPLING_BEAM_SEARCH
+                : WHISPER_SAMPLING_GREEDY
+        );
+
+        // core
+        wparams.print_progress   = cfg.print_progress;
         wparams.print_timestamps = cfg.print_timestamps;
-        wparams.single_segment = cfg.single_segment;
-        wparams.no_context = cfg.no_context;
-        wparams.language = cfg.language.c_str();
-        wparams.n_threads = cfg.n_threads;
+        wparams.single_segment   = cfg.single_segment;
+        wparams.no_context       = cfg.no_context;
+        wparams.language         = cfg.language.empty() ? nullptr : cfg.language.c_str();
+        wparams.n_threads        = cfg.n_threads;
+
+        // sampling
+        wparams.greedy.best_of        = cfg.greedy_best_of;
+        wparams.beam_search.beam_size = cfg.beam_size;
+
+        // output
+        wparams.translate         = cfg.translate;
+        wparams.detect_language   = cfg.detect_language;
+        wparams.no_timestamps     = cfg.no_timestamps;
+        wparams.print_special     = cfg.print_special;
+        wparams.print_realtime    = cfg.print_realtime;
+        wparams.debug_mode        = cfg.debug_mode;
+        wparams.tdrz_enable       = cfg.tdrz_enable;
+
+        // token timestamps
+        wparams.token_timestamps  = cfg.token_timestamps;
+        wparams.thold_pt          = cfg.thold_pt;
+        wparams.thold_ptsum       = cfg.thold_ptsum;
+        wparams.max_len           = cfg.max_len;
+        wparams.split_on_word     = cfg.split_on_word;
+        wparams.max_tokens        = cfg.max_tokens;
+
+        // filtering
+        wparams.suppress_blank        = cfg.suppress_blank;
+        wparams.suppress_nst          = cfg.suppress_nst;
+        wparams.no_speech_thold       = cfg.no_speech_thold;
+        wparams.suppress_regex        = cfg.suppress_regex.empty() ? nullptr : cfg.suppress_regex.c_str();
+        wparams.initial_prompt        = cfg.initial_prompt.empty() ? nullptr : cfg.initial_prompt.c_str();
+        wparams.carry_initial_prompt  = cfg.carry_initial_prompt;
+
+        // decoding
+        wparams.temperature     = cfg.temperature;
+        wparams.temperature_inc = cfg.temperature_inc;
+        wparams.entropy_thold   = cfg.entropy_thold;
+        wparams.logprob_thold   = cfg.logprob_thold;
+        wparams.max_initial_ts  = cfg.max_initial_ts;
+        wparams.length_penalty  = cfg.length_penalty;
+
+        // context
+        wparams.n_max_text_ctx = cfg.n_max_text_ctx;
+        wparams.offset_ms      = cfg.offset_ms;
+        wparams.duration_ms    = cfg.duration_ms;
+        wparams.audio_ctx      = cfg.audio_ctx;
 
         int ret = whisper_full(
             g_ctx, wparams,
@@ -52,8 +100,7 @@ static void WorkerLoop() {
 
         int nSeg = whisper_full_n_segments(g_ctx);
         for (int i = 0; i < nSeg; i++) {
-            const char* text =
-                whisper_full_get_segment_text(g_ctx, i);
+            const char* text = whisper_full_get_segment_text(g_ctx, i);
             if (!text || text[0] == '\0') continue;
 
             WDEBUG("[Auris] Result: %s\n", text);
@@ -65,9 +112,7 @@ static void WorkerLoop() {
 
 bool InitWhisper(const std::string& modelPath) {
     whisper_context_params cp = whisper_context_default_params();
-    g_ctx = whisper_init_from_file_with_params(
-        modelPath.c_str(), cp
-    );
+    g_ctx = whisper_init_from_file_with_params(modelPath.c_str(), cp);
     if (!g_ctx) return false;
 
     g_running = true;

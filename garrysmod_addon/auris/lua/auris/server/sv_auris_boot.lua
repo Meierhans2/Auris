@@ -15,12 +15,57 @@ end
 ---@return table
 local function buildWhisperConfig(cfg)
     return {
+        -- core
         language         = resolveLanguage(cfg),
         n_threads        = cfg.threads,
         print_progress   = cfg.print_progress,
         print_timestamps = cfg.print_timestamps,
         single_segment   = cfg.single_segment,
         no_context       = cfg.no_context,
+
+        -- sampling
+        use_beam_search  = cfg.use_beam_search,
+        greedy_best_of   = cfg.greedy_best_of,
+        beam_size        = cfg.beam_size,
+
+        -- output
+        translate             = cfg.translate,
+        detect_language       = cfg.detect_language,
+        no_timestamps         = cfg.no_timestamps,
+        print_special         = cfg.print_special,
+        print_realtime        = cfg.print_realtime,
+        debug_mode            = cfg.debug_mode,
+        tdrz_enable           = cfg.tdrz_enable,
+
+        -- token timestamps
+        token_timestamps     = cfg.token_timestamps,
+        thold_pt             = cfg.thold_pt,
+        thold_ptsum          = cfg.thold_ptsum,
+        max_len              = cfg.max_len,
+        split_on_word        = cfg.split_on_word,
+        max_tokens           = cfg.max_tokens,
+
+        -- filtering
+        suppress_blank       = cfg.suppress_blank,
+        suppress_nst         = cfg.suppress_nst,
+        no_speech_thold      = cfg.no_speech_thold,
+        suppress_regex       = cfg.suppress_regex,
+        initial_prompt       = cfg.initial_prompt,
+        carry_initial_prompt = cfg.carry_initial_prompt,
+
+        -- decoding
+        temperature      = cfg.temperature,
+        temperature_inc  = cfg.temperature_inc,
+        entropy_thold    = cfg.entropy_thold,
+        logprob_thold    = cfg.logprob_thold,
+        max_initial_ts   = cfg.max_initial_ts,
+        length_penalty   = cfg.length_penalty,
+
+        -- context
+        n_max_text_ctx = cfg.n_max_text_ctx,
+        offset_ms      = cfg.offset_ms,
+        duration_ms    = cfg.duration_ms,
+        audio_ctx      = cfg.audio_ctx,
     }
 end
 
