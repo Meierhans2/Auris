@@ -2,7 +2,7 @@
 -- Centralised here so sv_auris_feed and sv_auris_poll stay free of player logic.
 
 -- One flush signal per player per this many seconds.
--- Below 0.5 s a modified client could spam auris.FlushAll on every frame.
+-- Below 0.5 s a modified client could spam auris.Flush on every frame.
 local FLUSH_INTERVAL = 0.5
 
 ---@type table<string, number>  SteamID64 → earliest allowed next flush time

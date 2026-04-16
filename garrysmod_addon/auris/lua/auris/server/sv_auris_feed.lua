@@ -14,5 +14,5 @@ end
 
 net.Receive("auris_end_voice", function(_, ply)
     if not isValidSender(ply) then return end
-    auris.FlushAll()
+    auris.Flush(ply:AccountID())
 end)
