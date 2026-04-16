@@ -125,7 +125,7 @@ if errorlevel 1 (
         "$f = [System.IO.Path]::GetFullPath('%VULKAN_CPP:\=\\%');" ^
         "$content = [System.IO.File]::ReadAllText($f);" ^
         "$old = '#include <vulkan/vulkan.hpp>';" ^
-        "$inject = $old + [System.Environment]::NewLine + [System.Environment]::NewLine + '#ifdef _MSC_VER' + [System.Environment]::NewLine + '#include <ostream>' + [System.Environment]::NewLine + 'inline std::ostream& operator<<(std::ostream& os, vk::Buffer const^&) { return os; }' + [System.Environment]::NewLine + '#endif';" ^
+        "$inject = $old + [System.Environment]::NewLine + [System.Environment]::NewLine + '#ifdef _MSC_VER' + [System.Environment]::NewLine + '#include <ostream>' + [System.Environment]::NewLine + 'inline std::ostream& operator<<(std::ostream& os, vk::Buffer const&) { return os; }' + [System.Environment]::NewLine + '#endif';" ^
         "$content = $content.Replace($old, $inject);" ^
         "[System.IO.File]::WriteAllText($f, $content);"
     echo [patch] Done.
