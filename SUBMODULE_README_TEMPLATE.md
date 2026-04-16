@@ -88,3 +88,25 @@ Edit `lua/YOUR_ADDON_SLUG/config.lua` for file-based configuration.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+<!--
+  EXAMPLES
+  ========
+  These are real submodules included in the Auris repo. Use them as reference.
+-->
+
+## Examples
+
+### auris-logger — minimal, no dependencies
+
+[garrysmod_addon/auris-logger/](garrysmod_addon/auris-logger/)
+
+Prints every transcription to the server console with player name and SteamID64. No extra binaries required — good starting point for a simple submodule.
+
+### auris-discord — external HTTP dependency (gmsv_reqwest)
+
+[garrysmod_addon/auris-discord/](garrysmod_addon/auris-discord/)
+
+Forwards each transcription to a Discord webhook. Requires [gmsv_reqwest](https://github.com/williamvenner/gmsv_reqwest). Shows how to handle an extra binary dependency and filter unwanted results (`[BLANK_AUDIO]`).
