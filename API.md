@@ -44,7 +44,7 @@ Auris.GetConfig()
 Auris.IsReady()
 
 -- Semver string. Guard against breaking changes with a version check.
-Auris.VERSION  -- e.g. "2.0.0"
+Auris.VERSION  -- e.g. "1.0.0"
 
 -- Wraps a raw PCM binary (the `audio` callback argument) in a WAV container.
 -- Returns a complete WAV file as a Lua string — ready to pass to file.Write()

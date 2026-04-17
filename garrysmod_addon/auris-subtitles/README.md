@@ -25,7 +25,7 @@ Displays each player's transcribed speech as a floating subtitle above their hea
 
 ## Requirements
 
-- [Auris](https://github.com/ds-kimi/Auris) 2.0.0+
+- [Auris](https://github.com/ds-kimi/Auris) 1.1.2+
 
 ---
 

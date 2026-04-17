@@ -62,7 +62,7 @@ return {
 
     -- Greedy only. Number of independent greedy runs to compare and pick the best.
     -- 1 = pure greedy (fastest). 5 = default. Values above 5 rarely help.
-    greedy_best_of = 5,
+    greedy_best_of = 3,
 
     -- Beam search only. Width of the search tree.
     -- Higher = better quality but memory and time grow roughly exponentially.
@@ -88,7 +88,7 @@ return {
     -- Distilled models force this to true regardless of this setting.
     -- Enabling it saves a tiny amount of decode work; timestamps are rarely useful
     -- in game-chat addons unless you are building a replay or subtitle system.
-    no_timestamps = false,
+    no_timestamps = true,
 
     -- Include special control tokens (<SOT>, <EOT>, <BEG>, …) in the output text.
     -- Only useful when debugging the decoder; produces noise in production.
@@ -139,7 +139,7 @@ return {
     -- Hard limit on tokens per segment (0 = no limit).
     -- Forces a segment break after this many tokens regardless of content.
     -- Low values will cut off mid-word; use max_len + split_on_word instead.
-    max_tokens = 0,
+    max_tokens = 96,
 
 
     -- =========================================================================
