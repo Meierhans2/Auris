@@ -13,6 +13,8 @@
 
 Posts each player's transcribed speech to a Discord channel via webhook. The Discord message username is the player's in-game name. `[BLANK_AUDIO]` results are silently dropped.
 
+When the voice recording is available, it is attached to the same message as a `voice.wav` file so listeners can play it back directly in Discord.
+
 ---
 
 ## Requirements
@@ -27,8 +29,9 @@ Posts each player's transcribed speech to a Discord channel via webhook. The Dis
 1. Install [Auris](https://github.com/ds-kimi/Auris) and confirm it loads without errors.
 2. Install [gmsv_reqwest](https://github.com/williamvenner/gmsv_reqwest) binary module.
 3. Drop the `auris_discord` folder into `garrysmod/addons/`.
-4. Set your webhook URL in `lua/auris_discord/sv_discord_webhook.lua`.
-5. Restart the server.
+4. Open `lua/auris_discord/sv_discord_config.lua` and set your webhook URL.
+5. *(Optional)* Set `STEAM_API_KEY` in the same file to enable player avatar support. Get a key at [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey).
+6. Restart the server.
 
 ---
 
@@ -38,7 +41,7 @@ Posts each player's transcribed speech to a Discord channel via webhook. The Dis
 |---|---|
 | Subscriber key | `Discord_Webhook` |
 | Realm | Server |
-| Side effects | HTTP POST to Discord webhook on each transcription |
+| Side effects | HTTP POST to Discord webhook on each transcription; attaches `voice.wav` when audio is present |
 | Dependencies | gmsv_reqwest |
 
 ---
