@@ -71,13 +71,18 @@ end
 
 function Auris.Boot()
     local cfg = Auris._config
+    -- Remote backend still needs the Steam voice detour to decode Opus,
+    -- but whisper.cpp and its worker thread are skipped entirely.
+    local useRemote = cfg.openai_api_key ~= ""
 
-    if not auris.Init(cfg.model) then
-        ErrorNoHalt("[Auris] Failed to load model: " .. tostring(cfg.model) .. "\n")
+    if not auris.Init(cfg.model, useRemote) then
+        ErrorNoHalt("[Auris] Failed to init (model: " .. tostring(cfg.model) .. ")\n")
         return
     end
 
-    auris.SetConfig(buildWhisperConfig(cfg))
+    if not useRemote then
+        auris.SetConfig(buildWhisperConfig(cfg))
+    end
     auris.Debug(cfg.debug)
 
     Auris._ready = true

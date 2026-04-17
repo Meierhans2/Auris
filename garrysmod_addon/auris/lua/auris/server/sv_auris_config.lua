@@ -56,6 +56,10 @@ local DEFAULTS = {
     offset_ms      = 0,
     duration_ms    = 0,
     audio_ctx      = 0,
+
+    -- remote backend
+    openai_api_key = "",
+    openai_model   = "whisper-1",
 }
 
 ---@return table

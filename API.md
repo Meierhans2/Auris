@@ -23,6 +23,15 @@ end)
 
 > **Note:** Internally Auris fires `hook.Run("Auris_Transcription", ...)`. Do not use `hook.Add` on this hook directly — `Auris.Subscribe` adds duplicate-detection and namespacing that raw `hook.Add` skips.
 
+### Backends
+
+Auris ships with two backends selected by `config.lua`:
+
+- **Local (default)** — `openai_api_key = ""`, runs whisper.cpp on the server host.
+- **Remote** — `openai_api_key = "sk-..."`, forwards each clip to OpenAI's `/v1/audio/transcriptions`.
+
+Both fire the same hook with identical arguments. In remote mode the `audio` hook arg is still supplied — it is the exact PCM sent to OpenAI — so audio-archival submodules (e.g. [auris-discord](../auris-discord/)) work unchanged.
+
 ---
 
 ## API Functions

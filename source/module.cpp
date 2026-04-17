@@ -20,8 +20,9 @@ GMOD_MODULE_OPEN() {
     LUA->CreateTable();
 
     RegisterFunction(LUA, "Init", Whisper_Init);
-RegisterFunction(LUA, "Flush", Whisper_Flush);
+    RegisterFunction(LUA, "Flush", Whisper_Flush);
     RegisterFunction(LUA, "FlushAll", Whisper_FlushAll);
+    RegisterFunction(LUA, "FlushRaw", Whisper_FlushRaw);
     RegisterFunction(LUA, "Poll", Whisper_Poll);
     RegisterFunction(LUA, "Shutdown", Whisper_Shutdown);
     RegisterFunction(LUA, "Debug", Whisper_Debug);

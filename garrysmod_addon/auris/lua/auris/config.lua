@@ -243,4 +243,25 @@ return {
     -- Cannot exceed the model's built-in maximum.
     -- Smaller values reduce encoder compute at the cost of losing distant audio.
     audio_ctx = 0,
+
+
+    -- =========================================================================
+    -- REMOTE BACKEND (OpenAI)
+    -- =========================================================================
+
+    -- OpenAI API key. When non-empty, Auris skips loading whisper.cpp entirely
+    -- and forwards every captured voice clip to the OpenAI speech-to-text API
+    -- (https://api.openai.com/v1/audio/transcriptions).
+    -- Leave "" (default) to keep the local whisper.cpp backend — no network I/O,
+    -- full privacy, zero per-clip cost, but whatever CPU/GPU load the local
+    -- model requires.
+    -- Keys belong here
+    openai_api_key = "",
+
+    -- OpenAI transcription model. Ignored while openai_api_key is "".
+    -- Common options (see https://developers.openai.com/api/docs/guides/speech-to-text):
+    --   "whisper-1"               — legacy, cheapest, broadest language support
+    --   "gpt-4o-mini-transcribe"  — recommended default for English game chat
+    --   "gpt-4o-transcribe"       — highest accuracy, highest cost and latency
+    openai_model = "whisper-1",
 }

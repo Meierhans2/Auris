@@ -5,6 +5,7 @@
 extern int Whisper_Init(lua_State* L);
 extern int Whisper_Flush(lua_State* L);
 extern int Whisper_FlushAll(lua_State* L);
+extern int Whisper_FlushRaw(lua_State* L);
 extern int Whisper_Poll(lua_State* L);
 extern int Whisper_Shutdown(lua_State* L);
 extern int Whisper_Debug(lua_State* L);

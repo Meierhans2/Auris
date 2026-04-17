@@ -14,5 +14,11 @@ end
 
 net.Receive("auris_end_voice", function(_, ply)
     if not isValidSender(ply) then return end
-    auris.Flush(ply:AccountID())
+    -- Branch between backends: non-empty key flips the whole pipeline to
+    -- the OpenAI HTTP path and skips the whisper.cpp worker entirely.
+    if Auris._config.openai_api_key ~= "" then
+        Auris.SubmitRemote(ply)
+    else
+        auris.Flush(ply:AccountID())
+    end
 end)

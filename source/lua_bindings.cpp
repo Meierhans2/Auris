@@ -10,15 +10,26 @@
 
 using namespace GarrysMod::Lua;
 
-// auris.Init(modelPath) -> bool
+// auris.Init(modelPath [, skipWhisper]) -> bool
+// skipWhisper=true powers the remote (OpenAI) backend: audio capture still
+// needs the Steam voice decoder + detour, but whisper.cpp is never loaded
+// and the worker thread is never spawned.
 LUA_FUNCTION(Whisper_Init) {
     const char* path = LUA->CheckString(1);
+    bool skipWhisper = false;
+    if (LUA->Top() >= 2 && LUA->IsType(2, Type::Bool)) {
+        skipWhisper = LUA->GetBool(2);
+    }
     if (!InitSteamVoiceDecoder()) {
         LUA->PushBool(false);
         return 1;
     }
     if (!InstallVoiceHook()) {
         LUA->PushBool(false);
+        return 1;
+    }
+    if (skipWhisper) {
+        LUA->PushBool(true);
         return 1;
     }
     LUA->PushBool(InitWhisper(path));
@@ -45,6 +56,25 @@ LUA_FUNCTION(Whisper_FlushAll) {
         QueueTranscription(key, std::move(audio));
     }
     return 0;
+}
+
+// auris.FlushRaw(userid) -> string|nil
+// Remote backend entry point: returns the captured float32 PCM as a binary
+// Lua string without queueing a whisper job. Caller is expected to transport
+// the audio elsewhere (e.g. OpenAI /v1/audio/transcriptions) and fire the
+// Auris_Transcription hook itself.
+LUA_FUNCTION(Whisper_FlushRaw) {
+    int userid = (int)LUA->CheckNumber(1);
+    auto audio = GetAudioBuffer().Flush(userid);
+    if (audio.empty()) {
+        LUA->PushNil();
+        return 1;
+    }
+    LUA->PushString(
+        reinterpret_cast<const char*>(audio.data()),
+        audio.size() * sizeof(float)
+    );
+    return 1;
 }
 
 // auris.Poll() -> sid64, text, audio_binary or nil

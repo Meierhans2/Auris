@@ -87,6 +87,26 @@ Edit `garrysmod_addon/auris/lua/auris/config.lua` to change the model path, lang
 
 ---
 
+## Backends
+
+Auris has two transcription backends. Both fire the same `Auris_Transcription` hook with identical arguments, so submodules work unchanged on either.
+
+| Backend | When it runs | Trade-off |
+|---|---|---|
+| **Local (whisper.cpp)** | `openai_api_key = ""` (default) | Private, offline, no per-clip cost; uses server CPU/GPU and requires a downloaded model file |
+| **Remote (OpenAI)** | `openai_api_key` set in `config.lua` | Zero local compute, hosted accuracy; requires network I/O and incurs OpenAI per-minute billing |
+
+To switch to the remote backend, fill the two keys in `config.lua`:
+
+```lua
+openai_api_key = "sk-...",
+openai_model   = "whisper-1", -- or gpt-4o-mini-transcribe / gpt-4o-transcribe
+```
+
+Whisper.cpp is not loaded and the worker thread is not spawned in remote mode — the Steam voice detour still runs, captured Opus is still decoded to float32 PCM, but transcription happens entirely at `https://api.openai.com/v1/audio/transcriptions`. See [OpenAI's speech-to-text docs](https://developers.openai.com/api/docs/guides/speech-to-text?lang=curl) for pricing and model options.
+
+---
+
 ## Submodule API
 
 Auris exposes a hook that any addon can listen to:
