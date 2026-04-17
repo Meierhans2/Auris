@@ -1,6 +1,7 @@
 // Auris model lifecycle and background transcription
 #include "auris_context.h"
 #include "auris_config.h"
+#include "audio_cache.h"
 #include "debug_log.h"
 
 static whisper_context* g_ctx = nullptr;
@@ -88,6 +89,8 @@ static void WorkerLoop() {
         wparams.offset_ms      = cfg.offset_ms;
         wparams.duration_ms    = cfg.duration_ms;
         wparams.audio_ctx      = cfg.audio_ctx;
+
+        StoreCachedAudio(job.key, job.audio);
 
         int ret = whisper_full(
             g_ctx, wparams,

@@ -92,7 +92,7 @@ Edit `garrysmod_addon/auris/lua/auris/config.lua` to change the model path, lang
 Auris exposes a hook that any addon can listen to:
 
 ```lua
-hook.Run("Auris_Transcription", ply, steamid64, text)
+hook.Run("Auris_Transcription", ply, steamid64, text, audio)
 ```
 
 | Parameter | Type | Notes |
@@ -100,6 +100,7 @@ hook.Run("Auris_Transcription", ply, steamid64, text)
 | `ply` | `GPlayer` or `nil` | `nil` if the player disconnected before the result arrived |
 | `steamid64` | `string` | Always present |
 | `text` | `string` | Transcribed speech |
+| `audio` | `string` or `nil` | Raw 16 kHz mono float32 PCM binary. Convert to a playable WAV with `Auris.PCMToWAV(audio)` |
 
 ### Quick start
 
@@ -116,9 +117,14 @@ timer.Simple(0, function()
         return
     end
 
-    Auris.Subscribe("MyAddon_Feature", function(ply, steamid64, text)
+    Auris.Subscribe("MyAddon_Feature", function(ply, steamid64, text, audio)
         local name = IsValid(ply) and ply:Nick() or "Disconnected"
         Msg("[myAddon] " .. name .. ": " .. text .. "\n")
+
+        -- optional: save the voice clip to disk
+        if audio then
+            file.Write("myaddon/" .. steamid64 .. ".wav", Auris.PCMToWAV(audio))
+        end
     end)
 end)
 ```

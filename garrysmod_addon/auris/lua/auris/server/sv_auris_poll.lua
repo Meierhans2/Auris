@@ -5,19 +5,20 @@
 -- Submodules that need a live player guard with `if not ply then return end`.
 ---@param sid string
 ---@param text string
-local function dispatchResult(sid, text)
+---@param audio string|nil raw 16kHz float32 PCM binary, nil on cache miss
+local function dispatchResult(sid, text, audio)
     local ply = Auris.GetPlayerBySID64(sid)
-    hook.Run("Auris_Transcription", ply, sid, text)
+    hook.Run("Auris_Transcription", ply, sid, text, audio)
 end
 
 -- Drain the entire queue in one tick so bursts from multiple simultaneous
 -- speakers are not artificially spread across timer intervals.
 local function drainQueue()
     if not Auris.IsReady() then return end
-    local sid, text = auris.Poll()
+    local sid, text, audio = auris.Poll()
     while sid do
-        dispatchResult(sid, text)
-        sid, text = auris.Poll()
+        dispatchResult(sid, text, audio)
+        sid, text, audio = auris.Poll()
     end
 end
 

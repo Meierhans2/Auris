@@ -1,6 +1,7 @@
 // Lua-facing functions for auris module
 #include "lua_bindings.h"
 #include "auris_context.h"
+#include "audio_cache.h"
 #include "audio_buffer.h"
 #include "voice_hook.h"
 #include "steam_voice.h"
@@ -46,7 +47,7 @@ LUA_FUNCTION(Whisper_FlushAll) {
     return 0;
 }
 
-// auris.Poll() -> userid, text or nil
+// auris.Poll() -> sid64, text, audio_binary or nil
 LUA_FUNCTION(Whisper_Poll) {
     TranscriptResult result;
     if (!PollResult(result)) return 0;
@@ -56,7 +57,15 @@ LUA_FUNCTION(Whisper_Poll) {
         result.key, sid.c_str());
     LUA->PushString(sid.c_str());
     LUA->PushString(result.text.c_str());
-    return 2;
+
+    auto audio = TakeCachedAudio(result.key);
+    if (audio.empty()) {
+        LUA->PushNil();
+    } else {
+        LUA->PushString(reinterpret_cast<const char*>(audio.data()),
+            audio.size() * sizeof(float));
+    }
+    return 3;
 }
 
 // auris.Shutdown() -> nil

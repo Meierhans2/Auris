@@ -35,3 +35,34 @@ end
 function Auris.IsReady()
     return Auris._ready == true
 end
+
+-- LuaJIT (GMod) has no string.pack — write little-endian integers manually.
+local function le16(n)
+    return string.char(n % 256, math.floor(n / 256) % 256)
+end
+
+local function le32(n)
+    return string.char(n % 256, math.floor(n / 256) % 256,
+        math.floor(n / 65536) % 256, math.floor(n / 16777216) % 256)
+end
+
+-- Wraps raw float32 PCM (16kHz mono) in a WAV container.
+-- The binary string returned can be written directly to disk or sent over HTTP.
+---@param pcm string binary string of float32 samples from Auris_Transcription audio arg
+---@return string wav complete WAV file bytes
+function Auris.PCMToWAV(pcm)
+    local sampleRate    = 16000
+    local numChannels   = 1
+    local bitsPerSample = 32
+    local byteRate      = sampleRate * numChannels * (bitsPerSample / 8)
+    local blockAlign    = numChannels * (bitsPerSample / 8)
+    local dataSize      = #pcm
+    local chunkSize     = 36 + dataSize
+
+    -- audioFormat 3 = IEEE 754 float; 1 (PCM int) would produce garbled output
+    local fmt = "fmt " .. le32(16) .. le16(3) .. le16(numChannels)
+        .. le32(sampleRate) .. le32(byteRate) .. le16(blockAlign) .. le16(bitsPerSample)
+
+    return "RIFF" .. le32(chunkSize) .. "WAVE" .. fmt
+        .. "data" .. le32(dataSize) .. pcm
+end
