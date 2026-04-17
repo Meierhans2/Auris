@@ -71,7 +71,9 @@ CreateWorkspace({name = module_name, abi_compatible = false, path = "projects/" 
 			defines({"_GNU_SOURCE"})
 			-- -ffast-math enables -ffinite-math-only which ggml explicitly forbids
 			-- (vec.h line 1069 #errors on __FINITE_MATH_ONLY__). Use the safe subset instead.
-			buildoptions({"-fno-math-errno", "-funsafe-math-optimizations", "-fno-rounding-math", "-fno-signaling-nans", "-O3", "-flto", "-mavx2", "-mfma", "-mf16c", "-fno-stack-protector"})
+			-- -fno-stack-protector omitted: EDRs (CrowdSec, VirusTotal) flag binaries built without
+			-- stack protection as exploit-facilitating, triggering false CVE-2023-4911 detections.
+			buildoptions({"-fno-math-errno", "-funsafe-math-optimizations", "-fno-rounding-math", "-fno-signaling-nans", "-O3", "-flto", "-mavx2", "-mfma", "-mf16c"})
 			linkoptions({"-flto"})
 
 		filter({})
