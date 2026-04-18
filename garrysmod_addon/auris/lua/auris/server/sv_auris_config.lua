@@ -42,6 +42,8 @@ local DEFAULTS = {
     suppress_regex       = "",
     initial_prompt       = "",
     carry_initial_prompt = false,
+    vad_thold            = 0.6,
+    freq_thold           = 100.0,
 
     -- decoding
     temperature      = 0.0,

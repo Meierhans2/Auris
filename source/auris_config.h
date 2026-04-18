@@ -41,6 +41,8 @@ struct WhisperConfig {
     std::string suppress_regex = "";
     std::string initial_prompt = "";
     bool carry_initial_prompt  = false;
+    float vad_thold            = 0.6f;
+    float freq_thold           = 100.0f;
 
     // --- decoding ---
     float temperature     = 0.0f;

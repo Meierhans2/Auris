@@ -30,6 +30,10 @@ GMOD_MODULE_OPEN() {
     RegisterFunction(LUA, "SetConfig", Whisper_SetConfig);
     RegisterFunction(LUA, "GetConfig", Whisper_GetConfig);
 
+    LUA->PushString("VERSION");
+    LUA->PushString(AURIS_VERSION);
+    LUA->SetTable(-3);
+
     LUA->SetField(-2, "auris");
     LUA->Pop();
 

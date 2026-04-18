@@ -50,7 +50,12 @@ CreateWorkspace({name = module_name, abi_compatible = false, path = "projects/" 
 			"vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/*.c",
 			"vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/*.cpp",
 		})
+		local versionFile = io.open("VERSION", "r")
+		local aurisVersion = versionFile and versionFile:read("*l") or "unknown"
+		if versionFile then versionFile:close() end
+
 		defines({
+			"AURIS_VERSION=\"" .. aurisVersion .. "\"",
 			"GGML_USE_CPU",
 			"WHISPER_VERSION=\"1.0.0\"",
 			"GGML_VERSION=\"1.0.0\"",

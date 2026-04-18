@@ -3,6 +3,7 @@
 #include "auris_config.h"
 #include "audio_cache.h"
 #include "debug_log.h"
+#include "vad.h"
 
 static whisper_context* g_ctx = nullptr;
 static std::mutex g_resultMutex;
@@ -89,6 +90,20 @@ static void WorkerLoop() {
         wparams.offset_ms      = cfg.offset_ms;
         wparams.duration_ms    = cfg.duration_ms;
         wparams.audio_ctx      = cfg.audio_ctx;
+
+        // VAD gate: skip chunks whose trailing 1 s is as loud as the average,
+        // which covers both pure-silence buffers and continuous-noise buffers
+        // that would otherwise trigger whisper.cpp hallucinations
+        // ("Thanks for watching", "[Music]", etc.).
+        // vad_thold <= 0 disables the gate entirely.
+        if (cfg.vad_thold > 0.0f) {
+            std::vector<float> vad_copy = job.audio;
+            if (!auris::vad_simple(vad_copy, 16000, 1000,
+                                   cfg.vad_thold, cfg.freq_thold, false)) {
+                WDEBUG("[Auris] VAD: silence, skipping %.1fs chunk\n", dur);
+                continue;
+            }
+        }
 
         StoreCachedAudio(job.key, job.audio);
 

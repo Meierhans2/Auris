@@ -180,6 +180,23 @@ return {
     -- true  = initial_prompt text is always prepended, keeping style consistent.
     carry_initial_prompt = false,
 
+    -- Voice Activity Detection energy threshold. Gates chunks before Whisper
+    -- sees them, saving compute and preventing hallucinated text on silence
+    -- (e.g. "Thanks for watching", "[Music]").
+    -- Compares energy of the last 1000 ms against the whole-chunk average; a
+    -- chunk whose tail is quieter than (vad_thold * average) is treated as a
+    -- completed utterance and transcribed, otherwise it is skipped.
+    -- 0.6 matches upstream whisper.cpp stream/command example defaults.
+    -- Set to 0 (or negative) to disable VAD entirely and transcribe every chunk.
+    vad_thold = 0.6,
+
+    -- High-pass filter cutoff in Hz applied before VAD energy calculation.
+    -- Strips server-room fans, desk rumble and mic DC offset that would
+    -- otherwise register as "energy" and defeat VAD. 100 Hz is the upstream
+    -- default and leaves the full speech band intact.
+    -- Set to 0 to disable the filter (VAD then runs on raw PCM).
+    freq_thold = 100.0,
+
 
     -- =========================================================================
     -- DECODING

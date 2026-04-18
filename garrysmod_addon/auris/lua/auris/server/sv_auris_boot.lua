@@ -52,6 +52,8 @@ local function buildWhisperConfig(cfg)
         suppress_regex       = cfg.suppress_regex,
         initial_prompt       = cfg.initial_prompt,
         carry_initial_prompt = cfg.carry_initial_prompt,
+        vad_thold            = cfg.vad_thold,
+        freq_thold           = cfg.freq_thold,
 
         -- decoding
         temperature      = cfg.temperature,
@@ -86,4 +88,5 @@ function Auris.Boot()
     auris.Debug(cfg.debug)
 
     Auris._ready = true
+    print("[Auris] v" .. (auris.VERSION or "?") .. " ready")
 end

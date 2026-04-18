@@ -76,6 +76,8 @@ LUA_FUNCTION(Whisper_SetConfig) {
     cfg.suppress_regex       = GetStrField(  LUA, "suppress_regex",       cfg.suppress_regex.c_str());
     cfg.initial_prompt       = GetStrField(  LUA, "initial_prompt",       cfg.initial_prompt.c_str());
     cfg.carry_initial_prompt = GetBoolField( LUA, "carry_initial_prompt", cfg.carry_initial_prompt);
+    cfg.vad_thold            = GetFloatField(LUA, "vad_thold",            cfg.vad_thold);
+    cfg.freq_thold           = GetFloatField(LUA, "freq_thold",           cfg.freq_thold);
 
     // decoding
     cfg.temperature     = GetFloatField(LUA, "temperature",     cfg.temperature);
@@ -138,6 +140,8 @@ LUA_FUNCTION(Whisper_GetConfig) {
     LUA->PushString(cfg.suppress_regex.c_str());     LUA->SetField(-2, "suppress_regex");
     LUA->PushString(cfg.initial_prompt.c_str());     LUA->SetField(-2, "initial_prompt");
     LUA->PushBool(cfg.carry_initial_prompt);         LUA->SetField(-2, "carry_initial_prompt");
+    LUA->PushNumber(cfg.vad_thold);                  LUA->SetField(-2, "vad_thold");
+    LUA->PushNumber(cfg.freq_thold);                 LUA->SetField(-2, "freq_thold");
 
     // decoding
     LUA->PushNumber(cfg.temperature);     LUA->SetField(-2, "temperature");
