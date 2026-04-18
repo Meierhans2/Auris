@@ -21,6 +21,8 @@
 
 Captures player voice chat via an in-process `SV_BroadcastVoiceData` detour, decodes Opus audio, and transcribes it in real time using whisper.cpp. Auris is a silent platform — it does nothing by default except make transcriptions available. What happens with them is up to submodule addons.
 
+
+> Major performance issue on Linux 32-bit (CPU-only) , *working on it*
 ---
 
 ## Demo Video
