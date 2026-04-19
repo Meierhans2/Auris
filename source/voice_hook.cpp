@@ -35,9 +35,14 @@ typedef void (*SV_BroadcastVoiceData)(IClient* cl, int nBytes, char* data, int64
 #ifdef SYSTEM_LINUX
     static const std::vector<Symbol> BroadcastVoiceSyms = {
         Symbol::FromName("_Z21SV_BroadcastVoiceDataP7IClientiPcx"),
+#if defined ARCHITECTURE_X86
+        Symbol::FromSignature("\x55\x89\xe5\x57\x56\x53\x83\xec\x6c\xa1****\x8b\x75\x14\x8b\x7d\x18\x8b\x50\x48\x85\xd2"),
+#else
         Symbol::FromSignature("\x55\x48\x8D\x05****\x48\x89\xE5\x41\x57\x41\x56\x41\x89\xF6\x41\x55\x49\x89\xFD\x41\x54\x49\x89\xD4\x53\x48\x89\xCB\x48\x81\xEC****\x48\x8B\x3D****\x48\x39\xC7\x74\x25"),
+#endif
     };
 #endif
+
 
 static uint64_t ExtractServerSteamID(IClient* cl) {
 #if defined ARCHITECTURE_X86

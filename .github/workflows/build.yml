@@ -271,6 +271,11 @@ jobs:
           sed -i 's|VkPhysicalDeviceProperties2 props = vkdev\.getProperties2();|vk::PhysicalDeviceProperties2 props = vkdev.getProperties2();|' "$f"
           grep -q 'vk::PhysicalDeviceProperties2 props = vkdev.getProperties2' "$f"
 
+      - name: Patch ggml-cpu quants.c for 32-bit BMI2 (_pdep_u64 undefined on i386)
+        run: |
+          sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
+            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
+
       - name: Compile Vulkan shaders
         run: |
           set -e
@@ -513,6 +518,11 @@ jobs:
           tar -xzf premake-5.0.0-beta4-linux.tar.gz
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Patch ggml-cpu quants.c for 32-bit BMI2 (_pdep_u64 undefined on i386)
+        run: |
+          sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
+            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2

@@ -70,6 +70,21 @@ if errorlevel 1 ( echo ERROR: garrysmod_common submodules failed & popd & exit /
 popd
 
 :: ── [4/8] Build whisper.cpp ───────────────────────────────────
+:: Patch quants.c — _pdep_u64 is x86_64-only; 32-bit builds must use the scalar fallback.
+set QUANTS_C=%VENDOR_WHISPER_DIR%\ggml\src\ggml-cpu\arch\x86\quants.c
+findstr /c:"defined(__BMI2__) && defined(__x86_64__)" "%QUANTS_C%" >nul 2>&1
+if errorlevel 1 (
+    echo [patch] Patching quants.c for 32-bit BMI2...
+    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+        "$f = [System.IO.Path]::GetFullPath('%QUANTS_C:\=\\%');" ^
+        "$c = [System.IO.File]::ReadAllText($f);" ^
+        "$c = $c.Replace('#ifdef __BMI2__', '#if defined(__BMI2__) && defined(__x86_64__)');" ^
+        "[System.IO.File]::WriteAllText($f, $c);"
+    echo [patch] Done.
+) else (
+    echo [patch] quants.c already patched, skipping.
+)
+
 if "%CPU_ONLY%"=="1" (
     echo [4/8] Building whisper.cpp ^(CPU only^)...
     pushd "%VENDOR_WHISPER_DIR%"

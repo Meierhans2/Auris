@@ -81,6 +81,12 @@ CreateWorkspace({name = module_name, abi_compatible = false, path = "projects/" 
 			buildoptions({"-fno-math-errno", "-funsafe-math-optimizations", "-fno-rounding-math", "-fno-signaling-nans", "-O3", "-flto", "-mavx2", "-mfma", "-mf16c"})
 			linkoptions({"-flto"})
 
+		-- 32-bit x86 Linux: force SSE2 scalar FP to match x86_64 behavior.
+		-- Without this GCC uses x87 (80-bit extended precision) for scalar floats,
+		-- causing whisper softmax/logit values to diverge from every other platform.
+		filter("toolset:gcc or clang", "platforms:x86", "system:linux")
+			buildoptions({"-mfpmath=sse", "-msse2"})
+
 		filter({})
 
 		-- Opus for decoding steam voice

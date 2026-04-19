@@ -95,6 +95,16 @@ fi
 cmake --build build -j"$(nproc)" --config Release
 popd >/dev/null
 
+# Patch quants.c — _pdep_u64 is x86_64-only; 32-bit builds must use the scalar fallback.
+QUANTS_C="$VENDOR_WHISPER_DIR/ggml/src/ggml-cpu/arch/x86/quants.c"
+if grep -q '#ifdef __BMI2__' "$QUANTS_C" 2>/dev/null; then
+    echo "[patch] Patching quants.c for 32-bit BMI2..."
+    sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' "$QUANTS_C"
+    echo "[patch] Done."
+else
+    echo "[patch] quants.c already patched, skipping."
+fi
+
 if [[ "$CPU_ONLY" -eq 1 ]]; then
     echo ""
     echo "Setup complete (CPU only). Now run premake to generate the build files."
