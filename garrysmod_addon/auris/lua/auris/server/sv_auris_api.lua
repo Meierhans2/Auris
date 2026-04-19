@@ -5,6 +5,20 @@ Auris = Auris or {}
 
 Auris._ready  = false
 Auris._config = {}
+Auris._filter = nil
+
+-- Pass nil to clear the filter and transcribe everyone.
+---@param fn fun(ply: GPlayer): boolean|nil
+function Auris.SetFilter(fn)
+    Auris._filter = fn
+end
+
+---@param ply GPlayer
+---@return boolean
+function Auris.PassesFilter(ply)
+    if not Auris._filter then return true end
+    return Auris._filter(ply) == true
+end
 
 ---@param name string Unique subscriber name, e.g. "MyAddon_Feature"
 ---@param callback fun(ply: GPlayer|nil, steamid64: string, text: string, audio: string|nil)
@@ -17,6 +31,9 @@ function Auris.Subscribe(name, callback, filter)
         and hook.GetTable()["Auris_Transcription"]
         and hook.GetTable()["Auris_Transcription"][key] then
         MsgC(Color(255, 165, 0), "[Auris] WARNING: overwriting subscriber '" .. name .. "'\n")
+    end
+    if Auris._filter then
+        MsgC(Color(255, 165, 0), "[Auris] WARNING: subscriber '" .. name .. "' registered while a global SetFilter is active — some players will never be transcribed.\n")
     end
     if filter then
         hook.Add("Auris_Transcription", key, function(ply, sid, text, audio)

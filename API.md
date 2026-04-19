@@ -23,6 +23,32 @@ end)
 
 > **Note:** Internally Auris fires `hook.Run("Auris_Transcription", ...)`. Do not use `hook.Add` on this hook directly — `Auris.Subscribe` adds duplicate-detection and namespacing that raw `hook.Add` skips.
 
+### Global Filter
+
+`Auris.SetFilter` sets a server-wide gate. Players that fail it never have their voice flushed or transcribed — zero CPU cost. Call it once during your addon's init.
+
+```lua
+-- DarkRP: only transcribe police job
+Auris.SetFilter(function(ply)
+    return ply:Team() == TEAM_POLICE
+end)
+
+-- Usergroup: superadmin only
+Auris.SetFilter(function(ply)
+    return ply:IsSuperAdmin()
+end)
+
+-- Custom ULX group
+Auris.SetFilter(function(ply)
+    return ply:IsUserGroup("staff")
+end)
+
+-- Clear the filter — transcribe everyone (default behaviour)
+Auris.SetFilter(nil)
+```
+
+> **Note:** The global filter and per-subscriber filters are independent. A player must pass `SetFilter` before any transcription happens. Per-subscriber filters then gate individual callbacks on top of that.
+
 ### Filtering Subscribers
 
 Pass a predicate as the third argument to restrict which transcriptions reach your callback. The predicate receives the same four arguments as the callback. When the predicate returns `false` or `nil`, the callback is skipped entirely — no overhead beyond the filter call itself.
@@ -78,6 +104,11 @@ Both fire the same hook with identical arguments. In remote mode the `audio` hoo
 ## API Functions
 
 ```lua
+-- Set a global gate. Only players for whom fn(ply) returns true will have their
+-- voice buffered and transcribed. Players excluded here cost zero CPU — no flush,
+-- no whisper work, no hook. Pass nil to clear the filter and transcribe everyone.
+Auris.SetFilter(fn)
+
 -- Register a listener. name must be globally unique across all installed submodules.
 -- Convention: prefix with your addon folder name, e.g. "MyAddon_Feature"
 -- filter is optional. When provided, callback only fires when filter returns truthy.
