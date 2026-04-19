@@ -23,9 +23,17 @@ end)
 
 > **Note:** Internally Auris fires `hook.Run("Auris_Transcription", ...)`. Do not use `hook.Add` on this hook directly — `Auris.Subscribe` adds duplicate-detection and namespacing that raw `hook.Add` skips.
 
-### Global Filter
+---
 
-`Auris.SetFilter` sets a server-wide gate. Players that fail it never have their voice flushed or transcribed — zero CPU cost. Call it once during your addon's init.
+## Filtering — Two Levels
+
+Auris exposes two independent filtering mechanisms. They solve different problems and can be combined.
+
+### Level 1 — Global C++ gate (`Auris.SetFilter`)
+
+This is a **server-wide predicate** evaluated before any transcription work begins. Players that fail it are ignored completely — their voice buffer is never flushed, whisper never runs, no CPU is spent. Every subscriber on the server is affected.
+
+Use this when you want to permanently restrict which players Auris processes at all — e.g. only a specific DarkRP job, only staff, only a whitelist.
 
 ```lua
 -- DarkRP: only transcribe police job
@@ -43,15 +51,40 @@ Auris.SetFilter(function(ply)
     return ply:IsUserGroup("staff")
 end)
 
--- Clear the filter — transcribe everyone (default behaviour)
+-- Clear — transcribe everyone (default)
 Auris.SetFilter(nil)
 ```
 
-> **Note:** The global filter and per-subscriber filters are independent. A player must pass `SetFilter` before any transcription happens. Per-subscriber filters then gate individual callbacks on top of that.
+> **Warning:** `SetFilter` is global. If your addon sets one, every other subscriber on the server is also restricted to that set of players. When a subscriber registers while a global filter is active, Auris will print a console warning so the conflict is visible immediately.
+
+### Level 2 — Per-subscriber filter (`Auris.Subscribe` third arg)
+
+This is a **per-callback predicate** evaluated after transcription is already complete. The transcription still ran — this filter only decides whether your specific callback fires for a given result. Other subscribers are unaffected.
+
+Use this when transcription should still happen for everyone, but your addon only cares about a subset.
+
+```lua
+-- fires only for police, but other subscribers still see everyone
+Auris.Subscribe("MyAddon_Police", function(ply, steamid64, text, audio)
+    -- only cops reach here
+end, function(ply)
+    return IsValid(ply) and ply:Team() == TEAM_POLICE
+end)
+```
+
+### Which one to use?
+
+| | `SetFilter` | `Subscribe` filter |
+|---|---|---|
+| Stops transcription entirely | Yes — no CPU used | No — transcription already ran |
+| Affects all subscribers | Yes | No — only your callback |
+| Use when | You control the server and want a hard gate | You only need to narrow your own callback |
+
+> The two levels stack: a player must pass `SetFilter` before transcription runs; the per-subscriber filter then gates individual callbacks on top of that.
 
 ### Filtering Subscribers
 
-Pass a predicate as the third argument to restrict which transcriptions reach your callback. The predicate receives the same four arguments as the callback. When the predicate returns `false` or `nil`, the callback is skipped entirely — no overhead beyond the filter call itself.
+Pass a predicate as the third argument to restrict which transcriptions reach your callback. The predicate receives the same four arguments as the callback. When the predicate returns `false` or `nil`, the callback is skipped — no overhead beyond the filter call itself.
 
 ```lua
 -- No filter: every transcription fires the callback (default behaviour)
