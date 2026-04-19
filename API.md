@@ -169,13 +169,26 @@ Auris.VERSION  -- e.g. "1.0.0"
 Auris.PCMToWAV(audio)
 ```
 
+### Low-level module functions
+
+These are exposed directly on the `auris` module table (lowercase), not on the `Auris` Lua wrapper. You only need them if you are building a custom backend or capturing audio outside the normal transcription pipeline.
+
+```lua
+-- Returns the buffered PCM for userid as a raw binary string and clears the
+-- buffer, without queuing a whisper job. Returns nil if the buffer is empty.
+-- userid is the numeric GMod UserID (ply:UserID()), not a SteamID.
+-- Use this to capture audio without transcribing — save to disk, forward to a
+-- custom ASR endpoint, etc.
+auris.FlushRaw(userid)
+```
+
 ---
 
 ## Working With Audio
 
 Every `Auris.Subscribe` callback receives the raw voice recording as its 4th argument. This lets submodules archive, forward, or analyse the audio independently — the core never writes files itself.
 
-### Save a clip to disk
+### Save a clip to disk (after transcription)
 
 ```lua
 Auris.Subscribe("MyAddon_SaveClip", function(ply, steamid64, text, audio)
@@ -185,6 +198,30 @@ Auris.Subscribe("MyAddon_SaveClip", function(ply, steamid64, text, audio)
         Auris.PCMToWAV(audio))
 end)
 ```
+
+### Save audio without transcribing
+
+Auris fires `Auris_VoiceEnd` on the server the moment a player stops speaking, before any transcription work begins. Return `true` from the hook to consume the audio and skip transcription entirely.
+
+```lua
+hook.Add("Auris_VoiceEnd", "MyAddon_SaveRaw", function(ply)
+    if not IsValid(ply) then return end
+
+    local raw = auris.FlushRaw(ply:UserID())
+    if not raw then return end
+
+    local dir = "auris_clips"
+    file.CreateDir(dir)
+
+    -- steamid64 + unix timestamp gives a unique, sortable filename per player.
+    local filename = dir .. "/" .. ply:SteamID64() .. "_" .. os.time() .. ".wav"
+    file.Write(filename, Auris.PCMToWAV(raw))
+
+    return true -- skip transcription for this utterance
+end)
+```
+
+> **Note:** Returning `true` prevents transcription — `Auris.Subscribe` callbacks will not fire for that utterance. Omit the `return true` if you want both the saved file and a transcript (Auris will flush the buffer itself on the next tick, but `FlushRaw` already drained it, so transcription will be skipped regardless). If you need both, use `Auris.Subscribe` to save the audio after transcription instead.
 
 ### Send to an HTTP endpoint
 

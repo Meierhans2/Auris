@@ -139,6 +139,8 @@ return {
     -- Hard limit on tokens per segment (0 = no limit).
     -- Forces a segment break after this many tokens regardless of content.
     -- Low values will cut off mid-word; use max_len + split_on_word instead.
+    -- 0 = no limit. Non-zero forces a segment break mid-utterance which silently
+    -- drops any tokens past the cut when single_segment = true.
     max_tokens = 96,
 
 
