@@ -171,9 +171,10 @@ return {
 
     -- Text to prepend to the decoder's prompt before transcription begins.
     -- Guides style, vocabulary, and context for the model.
-    -- Example: "The following is game voice chat on a military roleplay server."
+    -- Applies to BOTH backends: whisper.cpp (initial_prompt) and OpenAI (prompt form field).
+    -- Example: "Garry's Mod DarkRP voice chat. Vocabulary: prop, physgun, ULX, NLR, mug, raid, PD, mayor."
     -- Capped internally at roughly half the model's text context (~224 tokens for tiny).
-    initial_prompt = "",
+    initial_prompt = "Garry's Mod voice chat. C++ module. Opus, whisper.cpp, transcription, open source. DarkRP, prop, physgun, ULX, NLR, mug, raid, PD, mayor, hitman, warrant, base, party, job, salary, printer, Bitcoin, shipment.",
 
     -- When processing multiple chunks, carry initial_prompt into every chunk.
     -- false = only the most recent transcribed text is used as rolling context.

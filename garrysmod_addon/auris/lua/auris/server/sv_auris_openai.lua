@@ -13,13 +13,21 @@ local CRLF     = "\r\n"
 
 ---@param model string
 ---@param wav string complete WAV bytes
+---@param prompt string optional context prompt (empty = omit)
 ---@return string body, string contentType
-local function buildMultipart(model, wav)
+local function buildMultipart(model, wav, prompt)
     local dash = "--" .. BOUNDARY
     local body = dash .. CRLF
         .. 'Content-Disposition: form-data; name="model"' .. CRLF .. CRLF
         .. model .. CRLF
-        .. dash .. CRLF
+
+    if prompt and prompt ~= "" then
+        body = body .. dash .. CRLF
+            .. 'Content-Disposition: form-data; name="prompt"' .. CRLF .. CRLF
+            .. prompt .. CRLF
+    end
+
+    body = body .. dash .. CRLF
         .. 'Content-Disposition: form-data; name="file"; filename="audio.wav"' .. CRLF
         .. "Content-Type: audio/wav" .. CRLF .. CRLF
         .. wav .. CRLF
@@ -56,7 +64,7 @@ function Auris.SubmitRemote(ply)
     local cfg    = Auris._config
     local sid    = ply:SteamID64()
     local wav    = Auris.PCMToWAV(pcm)
-    local body, contentType = buildMultipart(cfg.openai_model, wav)
+    local body, contentType = buildMultipart(cfg.openai_model, wav, cfg.initial_prompt)
 ---@diagnostic disable: param-type-mismatch, missing-fields
     HTTP({
         method  = "POST",
