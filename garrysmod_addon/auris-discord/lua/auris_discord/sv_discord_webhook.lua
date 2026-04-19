@@ -10,7 +10,7 @@ local STEAM_API = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2
 ---@param callback fun(avatarUrl: string|nil)
 local function fetchAvatar(steamid64, callback)
     if Config.STEAM_API_KEY == "" then callback(nil) return end
-
+---@diagnostic disable: param-type-mismatch, missing-fields
     HTTP({
         method  = "GET",
         url     = STEAM_API .. "?key=" .. Config.STEAM_API_KEY .. "&steamids=" .. steamid64,
@@ -22,6 +22,7 @@ local function fetchAvatar(steamid64, callback)
         end,
         failed = function() callback(nil) end,
     })
+    ---@diagnostic enable: param-type-mismatch, missing-fields
 end
 
 ---@param name string

@@ -57,7 +57,7 @@ function Auris.SubmitRemote(ply)
     local sid    = ply:SteamID64()
     local wav    = Auris.PCMToWAV(pcm)
     local body, contentType = buildMultipart(cfg.openai_model, wav)
-
+---@diagnostic disable: param-type-mismatch, missing-fields
     HTTP({
         method  = "POST",
         url     = ENDPOINT,
@@ -80,5 +80,5 @@ function Auris.SubmitRemote(ply)
             ErrorNoHalt("[Auris] OpenAI request failed: " .. tostring(reason) .. "\n")
         end,
     })
-
+---@diagnostic enable: param-type-mismatch, missing-fields
 end
