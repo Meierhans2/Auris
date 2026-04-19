@@ -189,14 +189,14 @@ return {
     -- completed utterance and transcribed, otherwise it is skipped.
     -- 0.6 matches upstream whisper.cpp stream/command example defaults.
     -- Set to 0 (or negative) to disable VAD entirely and transcribe every chunk.
-    vad_thold = 0.6,
+    vad_thold = 0,
 
     -- High-pass filter cutoff in Hz applied before VAD energy calculation.
     -- Strips server-room fans, desk rumble and mic DC offset that would
     -- otherwise register as "energy" and defeat VAD. 100 Hz is the upstream
     -- default and leaves the full speech band intact.
     -- Set to 0 to disable the filter (VAD then runs on raw PCM).
-    freq_thold = 100.0,
+    freq_thold = 0,
 
 
     -- =========================================================================

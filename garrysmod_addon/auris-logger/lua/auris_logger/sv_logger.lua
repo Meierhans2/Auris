@@ -41,7 +41,9 @@ function AurisLogger.Init()
         return false
     end
 
-    Auris.Subscribe("Logger_Console", onTranscription)
+    Auris.Subscribe("Logger_Console", onTranscription, function()
+        return true
+    end)
     MsgC(Color(120, 200, 255), "[Auris:Logger] Loaded\n")
     return true
 end
