@@ -10,7 +10,7 @@ local _flushTimes = {}
 
 -- Returns nil instead of an invalid entity so callers skip IsValid boilerplate.
 ---@param sid string
----@return GPlayer|nil
+---@return Player|nil
 function Auris.GetPlayerBySID64(sid)
     for _, ply in ipairs(player.GetAll()) do
         if ply:SteamID64() == sid then return ply end
@@ -18,7 +18,7 @@ function Auris.GetPlayerBySID64(sid)
     return nil
 end
 
----@param ply GPlayer
+---@param ply Player
 ---@return boolean  true = allowed, false = rate limited
 function Auris.CheckRateLimit(ply)
     local sid = ply:SteamID64()

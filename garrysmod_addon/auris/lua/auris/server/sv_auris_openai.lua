@@ -48,7 +48,7 @@ local function dispatch(sid, text, audio)
     hook.Run("Auris_Transcription", ply, sid, text, audio)
 end
 
----@param ply GPlayer
+---@param ply Player
 function Auris.SubmitRemote(ply)
     local pcm = auris.FlushRaw(ply:AccountID())
     if not pcm then return end
@@ -80,4 +80,5 @@ function Auris.SubmitRemote(ply)
             ErrorNoHalt("[Auris] OpenAI request failed: " .. tostring(reason) .. "\n")
         end,
     })
+
 end

@@ -5,7 +5,7 @@ util.AddNetworkString("auris_end_voice")
 
 -- IsValid + IsPlayer guard: during map transitions the engine can fire
 -- net handlers with a NULL entity before the player is fully spawned.
----@param ply GPlayer
+---@param ply Player
 ---@return boolean
 local function isValidSender(ply)
     if not IsValid(ply) or not ply:IsPlayer() then return false end

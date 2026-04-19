@@ -80,7 +80,7 @@ local function sendToDiscord(name, text, avatarUrl, wav)
     })
 end
 
----@param ply GPlayer|nil
+---@param ply Player|nil
 ---@param steamid64 string
 ---@param text string
 ---@param audio string|nil

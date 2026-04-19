@@ -7,7 +7,7 @@ local nextAllowed = {}
 
 local COOLDOWN = 0.5
 
----@param ply GPlayer
+---@param ply Player
 ---@return boolean
 local function isRateLimited(ply)
     local id = ply:SteamID64()
@@ -22,7 +22,7 @@ hook.Add("PlayerDisconnected", "AurisLogger_Cleanup", function(ply)
     end
 end)
 
----@param ply GPlayer|nil
+---@param ply Player|nil
 ---@param steamid64 string
 ---@param text string
 local function onTranscription(ply, steamid64, text)

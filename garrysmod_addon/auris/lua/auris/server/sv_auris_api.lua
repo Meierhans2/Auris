@@ -8,12 +8,12 @@ Auris._config = {}
 Auris._filter = nil
 
 -- Pass nil to clear the filter and transcribe everyone.
----@param fn fun(ply: GPlayer): boolean|nil
+---@param fn fun(ply: Player): boolean|nil
 function Auris.SetFilter(fn)
     Auris._filter = fn
 end
 
----@param ply GPlayer
+---@param ply Player
 ---@return boolean
 function Auris.PassesFilter(ply)
     if not Auris._filter then return true end
@@ -21,8 +21,8 @@ function Auris.PassesFilter(ply)
 end
 
 ---@param name string Unique subscriber name, e.g. "MyAddon_Feature"
----@param callback fun(ply: GPlayer|nil, steamid64: string, text: string, audio: string|nil)
----@param filter fun(ply: GPlayer|nil, steamid64: string, text: string, audio: string|nil): boolean|nil
+---@param callback fun(ply: Player|nil, steamid64: string, text: string, audio: string|nil)
+---@param filter fun(ply: Player|nil, steamid64: string, text: string, audio: string|nil): boolean|nil
 function Auris.Subscribe(name, callback, filter)
     local key = "Auris_Sub_" .. name
     -- Warn when overwriting an existing subscription so addon conflicts surface

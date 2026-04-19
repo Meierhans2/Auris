@@ -13,7 +13,7 @@ surface.CreateFont(FONT_WORLD, {
     antialias = true,
 })
 
----@param ply GPlayer
+---@param ply Player
 ---@param text string
 local function onSubtitle(ply, text)
     if not IsValid(ply) then return end
