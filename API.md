@@ -23,6 +23,47 @@ end)
 
 > **Note:** Internally Auris fires `hook.Run("Auris_Transcription", ...)`. Do not use `hook.Add` on this hook directly — `Auris.Subscribe` adds duplicate-detection and namespacing that raw `hook.Add` skips.
 
+### Filtering Subscribers
+
+Pass a predicate as the third argument to restrict which transcriptions reach your callback. The predicate receives the same four arguments as the callback. When the predicate returns `false` or `nil`, the callback is skipped entirely — no overhead beyond the filter call itself.
+
+```lua
+-- No filter: every transcription fires the callback (default behaviour)
+Auris.Subscribe("MyAddon_All", function(ply, steamid64, text, audio)
+    -- fires for everyone
+end)
+
+-- DarkRP job filter: only players in a specific job
+Auris.Subscribe("MyAddon_Police", function(ply, steamid64, text, audio)
+    -- only runs for cops
+end, function(ply)
+    return IsValid(ply) and ply:Team() == TEAM_POLICE
+end)
+
+-- DarkRP team by name (more portable across server configs)
+Auris.Subscribe("MyAddon_Medics", function(ply, steamid64, text, audio)
+    -- only runs for medics
+end, function(ply)
+    if not IsValid(ply) then return false end
+    local jobTable = DarkRP.getJobByCommand(ply:getDarkRPVar("job") or "")
+    return jobTable and jobTable.category == "Medical"
+end)
+
+-- Usergroup filter: superadmin only
+Auris.Subscribe("MyAddon_AdminLog", function(ply, steamid64, text, audio)
+    -- only runs for superadmins
+end, function(ply)
+    return IsValid(ply) and ply:IsSuperAdmin()
+end)
+
+-- Custom usergroup (ULX / serverside group)
+Auris.Subscribe("MyAddon_StaffLog", function(ply, steamid64, text, audio)
+    -- only runs for staff group members
+end, function(ply)
+    return IsValid(ply) and ply:IsUserGroup("staff")
+end)
+```
+
 ### Backends
 
 Auris ships with two backends selected by `config.lua`:
@@ -39,7 +80,9 @@ Both fire the same hook with identical arguments. In remote mode the `audio` hoo
 ```lua
 -- Register a listener. name must be globally unique across all installed submodules.
 -- Convention: prefix with your addon folder name, e.g. "MyAddon_Feature"
-Auris.Subscribe(name, callback)
+-- filter is optional. When provided, callback only fires when filter returns truthy.
+-- filter receives the same args as callback: (ply, steamid64, text, audio)
+Auris.Subscribe(name, callback, filter)
 
 -- Remove a listener.
 Auris.Unsubscribe(name)

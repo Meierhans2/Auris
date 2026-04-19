@@ -7,8 +7,9 @@ Auris._ready  = false
 Auris._config = {}
 
 ---@param name string Unique subscriber name, e.g. "MyAddon_Feature"
----@param callback fun(ply: GPlayer|nil, steamid64: string, text: string)
-function Auris.Subscribe(name, callback)
+---@param callback fun(ply: GPlayer|nil, steamid64: string, text: string, audio: string|nil)
+---@param filter fun(ply: GPlayer|nil, steamid64: string, text: string, audio: string|nil): boolean|nil
+function Auris.Subscribe(name, callback, filter)
     local key = "Auris_Sub_" .. name
     -- Warn when overwriting an existing subscription so addon conflicts surface
     -- immediately rather than silently dropping one subscriber's callbacks.
@@ -17,7 +18,15 @@ function Auris.Subscribe(name, callback)
         and hook.GetTable()["Auris_Transcription"][key] then
         MsgC(Color(255, 165, 0), "[Auris] WARNING: overwriting subscriber '" .. name .. "'\n")
     end
-    hook.Add("Auris_Transcription", key, callback)
+    if filter then
+        hook.Add("Auris_Transcription", key, function(ply, sid, text, audio)
+            if filter(ply, sid, text, audio) then
+                callback(ply, sid, text, audio)
+            end
+        end)
+    else
+        hook.Add("Auris_Transcription", key, callback)
+    end
 end
 
 ---@param name string
