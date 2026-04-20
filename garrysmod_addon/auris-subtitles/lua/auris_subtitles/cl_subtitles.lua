@@ -2,7 +2,7 @@ local RNDX     = include("auris_subtitles/rndx.lua")
 local LIFETIME   = 3.0
 local FADE_START = 2.5
 
----@type table<GEntity, table[]>
+---@type table<Entity, table[]>
 local subtitles = {}
 
 local FONT_WORLD = "AurisSubtitle_World"
@@ -49,8 +49,8 @@ end
 -- Glass label in world space — perspective gives free distance scaling (close=big, far=small).
 -- Right edge aligned to anchor (x=0); text wraps every 6 words.
 ---@param text string
----@param pos GVector
----@param ang GAngle
+---@param pos Vector
+---@param ang Angle
 ---@param a number 0-1 opacity multiplier
 local function drawGlassLabel3D2D(text, pos, ang, a)
     cam.Start3D2D(pos, ang, 0.15)

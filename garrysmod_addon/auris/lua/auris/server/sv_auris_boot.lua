@@ -77,9 +77,14 @@ function Auris.Boot()
     -- but whisper.cpp and its worker thread are skipped entirely.
     local useRemote = cfg.openai_api_key ~= ""
 
-    if not auris.Init(cfg.model, useRemote) then
-        ErrorNoHalt("[Auris] Failed to init (model: " .. tostring(cfg.model) .. ")\n")
-        return
+    -- _G.__AurisInitDone survives lua_refresh (unlike the Auris table which is
+    -- re-declared each run). Skip Init() when the C++ module is already running.
+    if not _G.__AurisInitDone then
+        if not auris.Init(cfg.model, useRemote) then
+            ErrorNoHalt("[Auris] Failed to init (model: " .. tostring(cfg.model) .. ")\n")
+            return
+        end
+        _G.__AurisInitDone = true
     end
 
     if not useRemote then
