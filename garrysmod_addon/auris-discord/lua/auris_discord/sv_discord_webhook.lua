@@ -105,7 +105,9 @@ function AurisDiscord.Init()
         return false
     end
 
-    Auris.Subscribe("Discord_Webhook", onTranscription)
+    Auris.Subscribe("Discord_Webhook", onTranscription, function()
+        return true
+    end)
     MsgC(Color(120, 200, 255), "[Auris:Discord] Loaded\n")
     return true
 end

@@ -2,10 +2,10 @@
 #include "steam_voice.h"
 #include <opus.h>
 #include "debug_log.h"
+#include "resampler.h"
 #include <cstring>
 
 static const int STEAM_RATE = 24000;
-static const int WHISPER_RATE = 16000;
 static const int FRAME_SIZE = 480;
 static const int MAX_FRAME = 5760;
 static OpusDecoder* g_decoder = nullptr;
@@ -32,26 +32,6 @@ void ShutdownSteamVoiceDecoder() {
     if (g_decoder) {
         opus_decoder_destroy(g_decoder);
         g_decoder = nullptr;
-    }
-}
-
-static void Resample(
-    const short* in, int inCount,
-    std::vector<float>& out
-) {
-    double ratio = (double)WHISPER_RATE / STEAM_RATE;
-    int outCount = (int)(inCount * ratio);
-    size_t base = out.size();
-    out.resize(base + outCount);
-
-    for (int i = 0; i < outCount; i++) {
-        double srcIdx = i / ratio;
-        int i0 = (int)srcIdx;
-        int i1 = i0 + 1;
-        if (i1 >= inCount) i1 = inCount - 1;
-        double frac = srcIdx - i0;
-        double val = in[i0] * (1.0 - frac) + in[i1] * frac;
-        out[base + i] = (float)(val / 32768.0);
     }
 }
 
@@ -101,7 +81,7 @@ static int DecodeOpusFrames(
         p += frameLen;
 
         if (samples > 0) {
-            Resample(pcm, samples, out);
+            ResamplePolyphase(pcm, samples, out);
             total += samples;
         }
     }
