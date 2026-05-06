@@ -17,6 +17,7 @@
 std::mutex g_steamidMutex;
 std::unordered_map<int, uint64_t> g_keyToSteamid;
 Detouring::Hook detour_BroadcastVoiceData;
+bool g_voiceHookInstalled = false;
 
 typedef void (*SV_BroadcastVoiceData)(IClient* cl, int nBytes, char* data, int64 xuid);
 // Thanks to gm_8bit for the signatures and general reverse engineering of the voice data flow!
@@ -93,6 +94,11 @@ static void hook_BroadcastVoiceData(IClient* cl, int nBytes, char* data, int64 x
 }
 
 bool InstallVoiceHook() {
+    // Map change rebuilds the Lua state but the DLL stays loaded; Init() runs
+    // again on top of a still-installed detour. Calling Create twice without
+    // a Destroy crashes inside Detouring::Hook.
+    if (g_voiceHookInstalled) return true;
+
     SourceSDK::ModuleLoader engine_loader("engine");
     SymbolFinder symfinder;
     void* sv_bcast = nullptr;
@@ -111,6 +117,7 @@ bool InstallVoiceHook() {
         Detouring::Hook::Target(sv_bcast),
         reinterpret_cast<void*>(&hook_BroadcastVoiceData));
     detour_BroadcastVoiceData.Enable();
+    g_voiceHookInstalled = true;
     WDEBUG("[Auris] Voice hook installed\n");
     return true;
 }

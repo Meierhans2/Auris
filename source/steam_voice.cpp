@@ -18,6 +18,10 @@ enum {
 };
 
 bool InitSteamVoiceDecoder() {
+    // Map-change re-entry: DLL stays loaded, so the decoder from the previous
+    // map is still valid. Skip recreating it (would leak the old one).
+    if (g_decoder) return true;
+
     int err = 0;
     g_decoder = opus_decoder_create(STEAM_RATE, 1, &err);
     if (err != OPUS_OK || !g_decoder) {
