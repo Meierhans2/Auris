@@ -105,6 +105,21 @@ else
     echo "[patch] quants.c already patched, skipping."
 fi
 
+# Patch whisper.cpp — cap n_audio_ctx to 512 for 32-bit RAM safety
+WHISPER_CPP="$VENDOR_WHISPER_DIR/src/whisper.cpp"
+if grep -q 'n_audio_ctx = hparams\.n_audio_ctx' "$WHISPER_CPP" 2>/dev/null; then
+    echo "[patch] Patching whisper.cpp for 32-bit audio context..."
+    sed -i 's/n_audio_ctx = hparams\.n_audio_ctx/n_audio_ctx = 512 \/\/ 32-bit RAM fix/g' "$WHISPER_CPP"
+    if grep -q 'n_audio_ctx = 512' "$WHISPER_CPP"; then
+        echo "[patch] Done: n_audio_ctx capped at 512"
+    else
+        echo "[patch] WARNING: Patch may have failed" >&2
+        grep -n 'n_audio_ctx' "$WHISPER_CPP" | head -3
+    fi
+else
+    echo "[patch] Already patched, skipping."
+fi
+
 if [[ "$CPU_ONLY" -eq 1 ]]; then
     echo ""
     echo "Setup complete (CPU only). Now run premake to generate the build files."
