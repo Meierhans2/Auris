@@ -90,6 +90,10 @@ static void WorkerLoop() {
         wparams.offset_ms      = cfg.offset_ms;
         wparams.duration_ms    = cfg.duration_ms;
         wparams.audio_ctx      = cfg.audio_ctx;
+        // HARD OVERRIDE START
+        wparams.audio_ctx      = 512; 
+        wparams.n_max_text_ctx = 64;
+        // HARD OVERRIDE END
 
         // VAD gate: skip chunks whose trailing 1 s is as loud as the average,
         // which covers both pure-silence buffers and continuous-noise buffers
@@ -130,6 +134,9 @@ static void WorkerLoop() {
 
 bool InitWhisper(const std::string& modelPath) {
     whisper_context_params cp = whisper_context_default_params();
+    // HARD OVERRIDE START
+    cp.audio_ctx = 512; 
+    // HARD OVERRIDE END
     g_ctx = whisper_init_from_file_with_params(modelPath.c_str(), cp);
     if (!g_ctx) return false;
 
