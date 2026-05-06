@@ -518,7 +518,7 @@ jobs:
           tar -xzf premake-5.0.0-beta4-linux.tar.gz
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
-
+      
       - name: Patch ggml-cpu quants.c for 32-bit BMI2 (_pdep_u64 undefined on i386)
         run: |
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
@@ -526,10 +526,9 @@ jobs:
 
       - name: Patch Whisper RAM (95MB to 32MB reduction)
         run: |
-          # Pfad-Validierung für Commit 95ea8f9 (Dateien liegen direkt im Root des Submoduls)
-          sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.cpp
-          sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.h
-
+          # Pfade für Commit 95ea8f9: Dateien liegen in src/ und include/
+          sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/src/whisper.cpp
+          sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/include/whisper.h
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
