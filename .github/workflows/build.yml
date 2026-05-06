@@ -519,14 +519,14 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-      - name: Patch Whisper Core & Arch (32-bit fix)
+      - name: Patch ggml-cpu quants.c for 32-bit BMI2 (_pdep_u64 undefined on i386)
         run: |
-          # 1. BMI2 Fix: Verhindert illegale 64-bit Befehle auf 32-bit CPUs
-          # Wir deaktivieren BMI2 für i386-Architekturen komplett, um SIGILL-Crashes zu vermeiden.
-          sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
+          sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
+            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
 
-          # 2. RAM-FIX: Reduziert den Adressraum-Bedarf (95MB -> 32MB)
-          # Da kein /src/ Ordner existiert, patchen wir direkt im Root von vendor/whisper.cpp/
+      - name: Patch Whisper RAM (95MB to 32MB reduction)
+        run: |
+          # Pfad-Validierung für Commit 95ea8f9 (Dateien liegen direkt im Root des Submoduls)
           sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.cpp
           sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.h
 
