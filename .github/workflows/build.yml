@@ -519,10 +519,15 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-      - name: Patch ggml-cpu quants.c for 32-bit BMI2 (_pdep_u64 undefined on i386)
+      - name: Patch Whisper RAM & Arch for 32-bit
         run: |
+          # Fix für BMI2 (i386 Support)
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
             vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
+          
+          # RAM-LIMIT INJECTION: Zwingt den Core auf 512 Kontext-Vektoren (spart ~60MB Compute Buffer)
+          # Wir patchen die Zuweisung in whisper.cpp, die aus dem Modell-Header liest
+          sed -i 's/hparams.n_audio_ctx = .*/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.cpp
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
@@ -538,7 +543,6 @@ jobs:
           name: gm_auris_linux32_cpu
           path: projects/linux/gmake2/**/gmsv_auris_linux.dll
           if-no-files-found: error
-
   # ── Linux 64-bit CPU ──────────────────────────────────────────
   build-linux64-cpu:
     name: Linux x86_64 (CPU)
