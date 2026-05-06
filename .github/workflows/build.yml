@@ -529,8 +529,8 @@ jobs:
 
       - name: Build (Release x86)
         run: |
-        make -C projects/linux/gmake2 config=release_x86 clean
-        make -C projects/linux/gmake2 config=release_x86 -j$(nproc)
+          make -C projects/linux/gmake2 config=release_x86 clean
+          make -C projects/linux/gmake2 config=release_x86 -j$(nproc)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
