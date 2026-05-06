@@ -526,7 +526,16 @@ jobs:
 
       - name: Patch Whisper Decode-Buffer (32-bit RAM Fix)
         run: |
-          sed -i 's/const int n_audio_ctx = hparams\.n_audio_ctx;/const int n_audio_ctx = 512; \/\/ 32-bit fix/g' vendor/whisper.cpp/src/whisper.cpp
+          FILE="vendor/whisper.cpp/src/whisper.cpp"
+          sed -i 's/n_audio_ctx = hparams\.n_audio_ctx/n_audio_ctx = 512 \/\/ 32-bit RAM fix/g' "$FILE"
+          if grep -q 'n_audio_ctx = 512' "$FILE"; then
+           echo "✓ Patch applied: n_audio_ctx capped at 512"
+           grep 'n_audio_ctx = 512' "$FILE" | head -3
+          else
+           echo "✗ Patch failed"
+           grep -n 'n_audio_ctx' "$FILE" | head -5
+           exit 1
+          fi
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
