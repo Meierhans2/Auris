@@ -522,17 +522,11 @@ jobs:
       - name: Patch ggml-cpu quants.c for 32-bit BMI2 (_pdep_u64 undefined on i386)
         run: |
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
-            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c   
+            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
 
       - name: Patch Whisper Decode-Buffer (32-bit RAM Fix)
         run: |
-          # Pfad im Submodule finden
-          WHISPER_CPP=$(find vendor/whisper.cpp -name "whisper.cpp")
-          
-          # NUR die lokale Variable fuer die Buffer-Berechnung ueberschreiben.
-          # Das laesst hparams.n_audio_ctx auf 1500 (Modell laedt!), 
-          # aber reserviert nur Speicher fuer 512.
-          sed -i 's/const int n_audio_ctx = hparams\.n_audio_ctx;/const int n_audio_ctx = 512; \/\/ 32-bit fix/g' "$WHISPER_CPP"
+          sed -i 's/const int n_audio_ctx = hparams\.n_audio_ctx;/const int n_audio_ctx = 512; \/\/ 32-bit fix/g' vendor/whisper.cpp/src/whisper.cpp
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
