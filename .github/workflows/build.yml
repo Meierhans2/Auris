@@ -519,15 +519,17 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-      - name: Patch Whisper RAM & Arch for 32-bit
+      - name: Patch Whisper Core & Arch (32-bit fix)
         run: |
-          # 1. BMI2 Fix (i386 Support)
+          # 1. BMI2 Fix: Verhindert illegale 64-bit Befehle auf 32-bit CPUs
+          # Wir deaktivieren BMI2 für i386-Architekturen komplett, um SIGILL-Crashes zu vermeiden.
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
 
-          # 2. CORE RAM-FIX (95MB Decoder-Buffer-Killer)
-          # Wir patchen die Dateien direkt an ihren Orten im Submodule
+          # 2. RAM-FIX: Reduziert den Adressraum-Bedarf (95MB -> 32MB)
+          # Da kein /src/ Ordner existiert, patchen wir direkt im Root von vendor/whisper.cpp/
           sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.cpp
           sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.h
+
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
