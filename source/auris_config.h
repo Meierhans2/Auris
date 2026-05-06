@@ -53,10 +53,10 @@ struct WhisperConfig {
     float length_penalty  = -1.0f;
 
     // --- context ---
-    int n_max_text_ctx = 16384;
+    int n_max_text_ctx = 224;
     int offset_ms      = 0;
     int duration_ms    = 0;
-    int audio_ctx      = 0;
+    int audio_ctx      = 512;
 };
 
 WhisperConfig GetWhisperConfig();
