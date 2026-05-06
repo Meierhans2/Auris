@@ -519,19 +519,15 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-      - name: Patch Whisper Core (Commit 95ea8f9 compatible)
+            - name: Patch Whisper Core (Commit 95ea8f9)
         run: |
-          # 1. BMI2 Fix für i386 (verhindert 'undefined reference to _pdep_u64')
-          sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
-            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
-          
-          # 2. RAM-FIX: Wir patchen die Modell-Ladelogik. 
-          # Wir suchen die Zuweisung hparams.n_audio_ctx = ... im src/whisper.cpp
-          # Der Regex stellt sicher, dass wir nur die Zuweisung anpassen, nicht die Definition.
-          sed -i 's/hparams\.n_audio_ctx\s*=\s*[0-9]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/src/whisper.cpp
-          
-          # 3. Sicherheits-Patch für den Header-Default (falls Init-Strukturen genutzt werden)
-          sed -i 's/int  n_audio_ctx = 1500;/int  n_audio_ctx = 512;/g' vendor/whisper.cpp/include/whisper.h
+          # 1. BMI2 Fix (i386 Support)
+          find vendor/whisper.cpp/ -name "quants.c" -exec sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' {} +
+
+          # 2. RAM-FIX (Core & Header)
+          # Wir suchen whisper.cpp und whisper.h überall im Submodule-Ordner
+          find vendor/whisper.cpp/ -name "whisper.cpp" -exec sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512; \/\/ FORCED BY AURIS/g' {} +
+          find vendor/whisper.cpp/ -name "whisper.h" -exec sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' {} +
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
