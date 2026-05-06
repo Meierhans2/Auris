@@ -14,7 +14,7 @@ struct WhisperConfig {
 
     // --- sampling ---
     bool use_beam_search  = false;
-    int greedy_best_of    = 5;
+    int greedy_best_of    = 1;
     int beam_size         = 5;
 
     // --- output ---
@@ -32,7 +32,7 @@ struct WhisperConfig {
     float thold_ptsum     = 0.01f;
     int max_len           = 0;
     bool split_on_word    = false;
-    int max_tokens        = 0;
+    int max_tokens        = 96;
 
     // --- filtering ---
     bool suppress_blank        = true;
