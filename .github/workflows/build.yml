@@ -524,15 +524,15 @@ jobs:
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
             vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c   
 
-      - name: Patch Whisper Core RAM (Hard-Override n_audio_ctx)
+      - name: Patch Whisper Decode-Buffer (32-bit RAM Fix)
         run: |
-          # Commit 95ea8f9 uses src/ and include/ structure.
-          # Force 512 context immediately after loading from file header.
-          sed -i 's/model\.hparams\.n_audio_ctx\s*=\s*hparams\.n_audio_ctx;/model.hparams.n_audio_ctx = 512; \/\/ forced for 32-bit/g' vendor/whisper.cpp/src/whisper.cpp
+          # Pfad im Submodule finden
+          WHISPER_CPP=$(find vendor/whisper.cpp -name "whisper.cpp")
           
-          # Ensure defaults in header are also set to 512.
-          sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/include/whisper.h
-
+          # NUR die lokale Variable fuer die Buffer-Berechnung ueberschreiben.
+          # Das laesst hparams.n_audio_ctx auf 1500 (Modell laedt!), 
+          # aber reserviert nur Speicher fuer 512.
+          sed -i 's/const int n_audio_ctx = hparams\.n_audio_ctx;/const int n_audio_ctx = 512; \/\/ 32-bit fix/g' "$WHISPER_CPP"
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
