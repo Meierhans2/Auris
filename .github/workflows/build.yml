@@ -522,17 +522,16 @@ jobs:
       - name: Patch ggml-cpu quants.c for 32-bit BMI2 (_pdep_u64 undefined on i386)
         run: |
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
-            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
+            vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c   
 
-      - name: Patch Whisper RAM (Brute-Force Reduction)
+      - name: Patch Whisper Core RAM (Hard-Override n_audio_ctx)
         run: |
-          # Wir suchen JEDE Datei im vendor-Ordner, die n_audio_ctx setzt oder definiert
-          # und zwingen den Wert auf 512.
-          find vendor/whisper.cpp/ -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.c" \) -exec sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' {} +
-          find vendor/whisper.cpp/ -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.c" \) -exec sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' {} +
+          # Commit 95ea8f9 uses src/ and include/ structure.
+          # Force 512 context immediately after loading from file header.
+          sed -i 's/model\.hparams\.n_audio_ctx\s*=\s*hparams\.n_audio_ctx;/model.hparams.n_audio_ctx = 512; \/\/ forced for 32-bit/g' vendor/whisper.cpp/src/whisper.cpp
           
-          # NEU: Wir patchen auch die Stelle, an der der Wert direkt aus dem Modell-Header gelesen wird
-          find vendor/whisper.cpp/ -type f -name "whisper.cpp" -exec sed -i 's/hparams\.n_audio_ctx = hparams\.n_audio_ctx;/hparams\.n_audio_ctx = 512;/g' {} +
+          # Ensure defaults in header are also set to 512.
+          sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/include/whisper.h
 
 
       - name: Generate Makefiles (x86)
