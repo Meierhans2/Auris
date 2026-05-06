@@ -519,15 +519,19 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-      - name: Patch Whisper RAM & Arch for 32-bit
+      - name: Patch Whisper Core (Commit 95ea8f9 compatible)
         run: |
-          # Fix für BMI2 (i386 Support)
+          # 1. BMI2 Fix für i386 (verhindert 'undefined reference to _pdep_u64')
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
             vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
           
-          # RAM-LIMIT INJECTION: Zwingt den Core auf 512 Kontext-Vektoren (spart ~60MB Compute Buffer)
-          # Wir patchen die Zuweisung in whisper.cpp, die aus dem Modell-Header liest
-          sed -i 's/hparams.n_audio_ctx = .*/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.cpp
+          # 2. RAM-FIX: Wir patchen die Modell-Ladelogik. 
+          # Wir suchen die Zuweisung hparams.n_audio_ctx = ... im src/whisper.cpp
+          # Der Regex stellt sicher, dass wir nur die Zuweisung anpassen, nicht die Definition.
+          sed -i 's/hparams\.n_audio_ctx\s*=\s*[0-9]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/src/whisper.cpp
+          
+          # 3. Sicherheits-Patch für den Header-Default (falls Init-Strukturen genutzt werden)
+          sed -i 's/int  n_audio_ctx = 1500;/int  n_audio_ctx = 512;/g' vendor/whisper.cpp/include/whisper.h
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
