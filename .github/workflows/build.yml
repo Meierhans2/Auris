@@ -528,7 +528,9 @@ jobs:
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
 
       - name: Build (Release x86)
-        run: make -C projects/linux/gmake2 config=release_x86 -j$(nproc)
+        run: |
+        make -C projects/linux/gmake2 config=release_x86 clean
+        make -C projects/linux/gmake2 config=release_x86 -j$(nproc)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
