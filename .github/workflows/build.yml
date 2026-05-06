@@ -519,7 +519,7 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-            - name: Patch Whisper Core (Commit 95ea8f9)
+      - name: Patch Whisper Core (Commit 95ea8f9)
         run: |
           # 1. BMI2 Fix (i386 Support)
           find vendor/whisper.cpp/ -name "quants.c" -exec sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' {} +
