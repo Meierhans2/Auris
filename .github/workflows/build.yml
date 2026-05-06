@@ -524,11 +524,16 @@ jobs:
           sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' \
             vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
 
-      - name: Patch Whisper RAM (95MB to 32MB reduction)
+      - name: Patch Whisper RAM (Brute-Force Reduction)
         run: |
-          # Pfade für Commit 95ea8f9: Dateien liegen in src/ und include/
-          sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/src/whisper.cpp
-          sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/include/whisper.h
+          # Wir suchen JEDE Datei im vendor-Ordner, die n_audio_ctx setzt oder definiert
+          # und zwingen den Wert auf 512.
+          find vendor/whisper.cpp/ -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.c" \) -exec sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' {} +
+          find vendor/whisper.cpp/ -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.c" \) -exec sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' {} +
+          
+          # NEU: Wir patchen auch die Stelle, an der der Wert direkt aus dem Modell-Header gelesen wird
+          find vendor/whisper.cpp/ -type f -name "whisper.cpp" -exec sed -i 's/hparams\.n_audio_ctx = hparams\.n_audio_ctx;/hparams\.n_audio_ctx = 512;/g' {} +
+
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
