@@ -134,9 +134,6 @@ static void WorkerLoop() {
 
 bool InitWhisper(const std::string& modelPath) {
     whisper_context_params cp = whisper_context_default_params();
-    // HARD OVERRIDE START
-    cp.audio_ctx = 512; 
-    // HARD OVERRIDE END
     g_ctx = whisper_init_from_file_with_params(modelPath.c_str(), cp);
     if (!g_ctx) return false;
 
