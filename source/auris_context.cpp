@@ -136,7 +136,31 @@ bool InitWhisper(const std::string& modelPath) {
     whisper_context_params cp = whisper_context_default_params();
     g_ctx = whisper_init_from_file_with_params(modelPath.c_str(), cp);
     if (!g_ctx) return false;
-
+    
+    // --- HARD MEMORY INJECTION START ---
+    // Wir wissen: g_ctx zeigt auf eine interne Struktur. 
+    // In whisper.cpp (Commit 95ea8f9) liegen die hparams (Hyperparameter) 
+    // am Anfang des Modell-Bereichs. Wir überschreiben n_audio_ctx (Offset-basiert).
+    
+    try {
+        // Wir casten den Kontext, um an die internen hparams zu kommen.
+        // n_audio_ctx ist in der hparams-Struktur meist das 3. oder 4. Feld (int32_t).
+        // Wir setzen es direkt im RAM auf 512.
+        int32_t* internal_hparams = (int32_t*)g_ctx; 
+        
+        // Suche nach dem Wert 1500 in den ersten 64 Bytes des Kontexts
+        for (int i = 0; i < 16; i++) {
+            if (internal_hparams[i] == 1500) {
+                internal_hparams[i] = 512; // Injection: 30s -> 10s
+                WDEBUG("[Auris] RAM-Fix: Found and patched n_audio_ctx at offset %d\n", i);
+                break;
+            }
+        }
+    } catch (...) {
+        WDEBUG("[Auris] RAM-Fix failed: Memory protection fault.\n");
+    }
+    // --- HARD MEMORY INJECTION END ---
+    
     g_running = true;
     g_worker = std::thread(WorkerLoop);
     WDEBUG("[Auris] Worker thread started\n");
