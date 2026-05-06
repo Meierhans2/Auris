@@ -519,15 +519,15 @@ jobs:
           chmod +x premake5
           echo "${{ github.workspace }}" >> $GITHUB_PATH
 
-      - name: Patch Whisper Core (Commit 95ea8f9)
+      - name: Patch Whisper RAM & Arch for 32-bit
         run: |
           # 1. BMI2 Fix (i386 Support)
-          find vendor/whisper.cpp/ -name "quants.c" -exec sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' {} +
+          sed -i 's/#ifdef __BMI2__/#if defined(__BMI2__) \&\& defined(__x86_64__)/g' vendor/whisper.cpp/ggml/src/ggml-cpu/arch/x86/quants.c
 
-          # 2. RAM-FIX (Core & Header)
-          # Wir suchen whisper.cpp und whisper.h überall im Submodule-Ordner
-          find vendor/whisper.cpp/ -name "whisper.cpp" -exec sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512; \/\/ FORCED BY AURIS/g' {} +
-          find vendor/whisper.cpp/ -name "whisper.h" -exec sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' {} +
+          # 2. CORE RAM-FIX (95MB Decoder-Buffer-Killer)
+          # Wir patchen die Dateien direkt an ihren Orten im Submodule
+          sed -i 's/hparams\.n_audio_ctx\s*=\s*[^;]\+;/hparams.n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.cpp
+          sed -i 's/int\s*n_audio_ctx\s*=\s*1500;/int n_audio_ctx = 512;/g' vendor/whisper.cpp/whisper.h
 
       - name: Generate Makefiles (x86)
         run: ./premake5 --os=linux --gmcommon=./garrysmod_common gmake2
